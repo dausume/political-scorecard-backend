@@ -1,0 +1,18 @@
+version: '3.8'
+
+# Note : This mariadb relies on init.sql to create the initial access for the server.
+# The server then uses that access to create the databases and tables.
+# In a production environment, you would want to then implement a secondary server-access permission
+# to prevent unauthorized actions being taken on the database in the case that is compromised.
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/data/db
+
+volumes:
+  db-data:

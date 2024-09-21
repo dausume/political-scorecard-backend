@@ -1,0 +1,5 @@
+### Geolocation Objects
+
+These define objects that are to be stored specifically in a geolocation format.
+Most of these are objects meant to be rendered directly onto a map, and act as a means to
+tie the map to other data.

@@ -1,0 +1,20 @@
+app:
+  datasource:
+    primary:
+      db_name: mysql
+      url: jdbc:mariadb://psc-mariadb:3306/mysql
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
+    context:
+      db_name: psc_context_db
+      url: jdbc:mariadb://psc-mariadb:3306/psc_context_db
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
+    location:
+      db_name: psc_location_db
+      url: jdbc:mariadb://psc-mariadb:3306/psc_location_db
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver

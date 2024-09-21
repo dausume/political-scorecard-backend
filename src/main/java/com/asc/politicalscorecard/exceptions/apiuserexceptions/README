@@ -1,0 +1,9 @@
+### API User Exceptions
+This series of APIs are used to inform someone sending information to the API if their data is malformed, and if it is,
+tell them what their data should look like.
+
+## Security Warning for Implementation!!
+This series of exceptions sends data back to the user about the data-structure, meaning this series of errors should
+be access-restricted in a production environment or disabled entirely.  For more secure environments where the data-structure may need to be modified, this approach will give away data-structure information to end-users with the permissions to see these errors.
+
+However, it is entirely feasible that if there is a need for many organizations to integrate that having these error responses enabled in the production environment will make life significantly easier for other organizations to figure out how to integrate with the system.

@@ -1,0 +1,21 @@
+services:
+  postgis:
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_PASSWORD: pw  # Set the password for the default 'postgres' user
+    #  POSTGRES_DB: psc_db
+    #  POSTGRES_USER: psc_server
+    #  POSTGRES_PASSWORD: pw
+    #  PGPASSWORD: pw
+    #  PGUSER: psc_server
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf  # Mount pg_hba.conf to a custom location
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf  # Mount custom postgresql.conf to reference pg_hba.conf
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+
+volumes:
+  postgis_data:
+    driver: local

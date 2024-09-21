@@ -1,0 +1,15 @@
+### What are Serializers, De-Serializers, and Mixins in this context of Springboot?
+These are the different methods for modifying how json is handled in the Springboot app.
+
+## Serializers
+Used to Serialize a JAVA object, converting it into json text.
+JSON is one of the main formats data is sent in on the web, by defining our serializer we can specify
+exactly what we want our json to look like when we hit an end-point for a particular object.
+
+## De-Serializers
+Used to De-Serialize JSON text recieved on an API (Controllers in SPringboot), converting the JSON text into
+the given object.
+
+## Mixins
+Used to define additional customization onto how the Serializers and De-serializers work, such as when to
+ignore particular variables conditionally in json.

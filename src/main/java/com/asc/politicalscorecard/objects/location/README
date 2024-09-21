@@ -1,0 +1,3 @@
+## Location
+Location Objects store the data about a location which we do not need to see on the map,
+while also acting as a means to link the context and term data to the abstract locations defined here.
