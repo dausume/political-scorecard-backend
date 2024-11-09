@@ -22,19 +22,19 @@ public class PlanetService {
         return planetDAO.create(planet);
     }
 
-    public PlanetDTO getPlanet(String id) {
+    public ApiResponse<PlanetDTO> getPlanet(String id) {
         return planetDAO.read(id);
     }
 
-    public List<PlanetDTO> getAllPlanets() {
+    public ApiResponse<List<PlanetDTO>> getAllPlanets() {
         return planetDAO.readAll();
     }
 
-    public boolean updatePlanet(PlanetDTO planet) {
+    public ApiResponse<PlanetDTO> updatePlanet(PlanetDTO planet) {
         return planetDAO.update(planet);
     }
 
-    public boolean deletePlanet(String id) {
+    public ApiResponse<PlanetDTO> deletePlanet(String id) {
         return planetDAO.delete(id);
     }
         

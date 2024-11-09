@@ -1,5 +1,5 @@
 # Use the official Maven image with Eclipse Temurin 21
-FROM maven:3.9-eclipse-temurin-21
+FROM maven:3.9-eclipse-temurin-22
 
 # Switch to root user
 USER root
@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Copy the startup scripts and make them executable
 COPY ./startup_shell ./startup_shell
-RUN chmod +rx ./startup_shell ./startup_shell/backend_startup_shell.sh
+RUN chmod +rx ./startup_shell ./startup_shell/dev_startup_shell.sh
 
 # Copy the entire project directory to the working directory
 COPY ./ ./political-scorecard-backend
@@ -18,4 +18,4 @@ COPY ./ ./political-scorecard-backend
 RUN chmod +rwx ./political-scorecard-backend
 
 # Set the entry point to the startup script
-ENTRYPOINT ["./startup_shell/backend_startup_shell.sh"]
+ENTRYPOINT ["./startup_shell/dev_startup_shell.sh"]

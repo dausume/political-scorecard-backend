@@ -1,0 +1,2 @@
+# Test connection to Redis
+redis-cli -h localhost -p 6379 --user myuser --pass my_secure_password

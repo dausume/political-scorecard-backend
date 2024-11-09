@@ -3,11 +3,11 @@ package com.asc.politicalscorecard.controllers;
 import com.asc.politicalscorecard.controllers.responses.ApiResponse;
 import com.asc.politicalscorecard.json.dtos.nationdto.NationDTO;
 import com.asc.politicalscorecard.json.dtos.nationdto.NationWithPlanetDTO;
-import com.asc.politicalscorecard.json.dtos.planetdto.PlanetDTO;
 import com.asc.politicalscorecard.services.nationservices.NationService;
 import com.asc.politicalscorecard.services.nationservices.NationWithPlanetService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,65 +37,90 @@ public class NationController {
     // CREATE
 
     @PostMapping("create")
-    public ResponseEntity<NationDTO> createNation(@RequestBody NationDTO nationDTO) {
+    public ResponseEntity<ApiResponse<NationDTO>> createNation(@RequestBody NationDTO nationDTO) {
         ApiResponse<NationDTO> response = nationService.createNation(nationDTO);
         if (response.isSuccess()) {
-            return ResponseEntity.ok(nationDTO);
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.OK);
         } else {
             // If the nation was not created, return a 500 error
             // In a fully implemented system, all error responses should be handled by exception handling
             // this is for catching any unexpected errors.
             // Exception handling is centralized and generates Failure responses in the GlobalExceptionHandler class.
-            return ResponseEntity.status(500).build();
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
     // READ
 
     @GetMapping("/{id}")
-    public ResponseEntity<NationDTO> getNationById(@PathVariable String id) {
-        NationDTO nationDTO = nationService.getNationById(id);
-        if (nationDTO != null) {
-            return ResponseEntity.ok(nationDTO);
+    public ResponseEntity<ApiResponse<NationDTO>> getNationById(@PathVariable String id) {
+        ApiResponse<NationDTO> response = nationService.getNationById(id);
+        if (response.isSuccess()) {
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.OK);
         } else {
-            return ResponseEntity.notFound().build();
+            // If the nation was not created, return a 500 error
+            // In a fully implemented system, all error responses should be handled by exception handling
+            // this is for catching any unexpected errors.
+            // Exception handling is centralized and generates Failure responses in the GlobalExceptionHandler class.
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("all")
-    public ResponseEntity<List<NationDTO>> getAllNations() {
-        List<NationDTO> nations = nationService.getAllNations();
-        return ResponseEntity.ok(nations);
+    public ResponseEntity<ApiResponse<List<NationDTO>>> getAllNations() {
+        ApiResponse<List<NationDTO>> response = nationService.getAllNations();
+        if (response.isSuccess()) {
+            return new ResponseEntity<ApiResponse<List<NationDTO>>>(response, HttpStatus.OK);
+        } else {
+            // If the nation was not created, return a 500 error
+            // In a fully implemented system, all error responses should be handled by exception handling
+            // this is for catching any unexpected errors.
+            // Exception handling is centralized and generates Failure responses in the GlobalExceptionHandler class.
+            return new ResponseEntity<ApiResponse<List<NationDTO>>>(response, HttpStatus.BAD_REQUEST);
+        }
     }
 
     // UPDATE
 
     @PutMapping("/{id}")
-    public ResponseEntity<NationDTO> updateNation(@PathVariable String id, @RequestBody NationDTO nationDTO) {
+    public ResponseEntity<ApiResponse<NationDTO>> updateNation(@PathVariable String id, @RequestBody NationDTO nationDTO) {
         System.out.println("Inside update Controller function");
-        nationDTO.setId(id); // Ensure the ID is set correctly
-        if (nationService.updateNation(nationDTO)) {
-            return ResponseEntity.ok(nationDTO);
-        } else {
-            return ResponseEntity.status(500).build();
+        //nationDTO.setId(id); // Ensure the ID is set correctly
+        ApiResponse<NationDTO> response = nationService.updateNation(nationDTO);
+        if (response.isSuccess()) {
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.OK);
+        } 
+        else 
+        {
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
     // DELETE
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNation(@PathVariable String id) {
-        if (nationService.deleteNation(id)) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.status(500).build();
+    public ResponseEntity<ApiResponse<NationDTO>> deleteNation(@PathVariable String id) {
+        ApiResponse<NationDTO> response = nationService.deleteNation(id);
+        if (response.isSuccess()) {
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.OK);
+        } 
+        else 
+        {
+            return new ResponseEntity<ApiResponse<NationDTO>>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
     // ------------ Nation Controller with Related Home Planet ----------
 
     @GetMapping("/withPlanet/{id}")
-    public NationWithPlanetDTO getNationWithPlanet(@PathVariable String id) {
-        return nationWithPlanetService.getNationWithPlanetById(id);
+    public ResponseEntity<ApiResponse<NationWithPlanetDTO>> getNationWithPlanet(@PathVariable String id) {
+        ApiResponse<NationWithPlanetDTO> response = nationWithPlanetService.getNationWithPlanetById(id);
+        if (response.isSuccess()) {
+            return new ResponseEntity<ApiResponse<NationWithPlanetDTO>>(response, HttpStatus.OK);
+        } 
+        else 
+        {
+            return new ResponseEntity<ApiResponse<NationWithPlanetDTO>>(response, HttpStatus.BAD_REQUEST);
+        }
     }
 }

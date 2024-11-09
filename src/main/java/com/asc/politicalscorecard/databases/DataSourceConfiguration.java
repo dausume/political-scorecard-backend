@@ -13,8 +13,16 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.DependsOn; 
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
+//import autowired
+import org.springframework.beans.factory.annotation.Autowired;
 
-import com.asc.politicalscorecard.databases.datasourceinitializers.contextdatasource.ContextDatasourceInitializer;
+import com.asc.politicalscorecard.databases.datasourceinitializers.scoringdatasource.ScoringDatasourceInitializer;
+import com.asc.politicalscorecard.databases.datasourceinitializers.geolocationdatasource.GeoLocationDatasourceInitializer;
 import com.asc.politicalscorecard.databases.datasourceinitializers.locationsdatasource.LocationDatasourceInitializer;
 
 import org.springframework.context.ApplicationContext;
@@ -28,7 +36,8 @@ public class DataSourceConfiguration {
     private final ApplicationContext applicationContext;
     
 
-    DataSourceConfiguration(ApplicationContext applicationContext) {
+    DataSourceConfiguration(ApplicationContext applicationContext) 
+    {
         System.out.println("Starting DataSourceConfiguration");
         this.applicationContext = applicationContext;
     }
@@ -39,13 +48,15 @@ public class DataSourceConfiguration {
 
     @Bean
     @Primary
-    @ConfigurationProperties("app.datasource.primary")
+    @Scope("singleton")
+    @ConfigurationProperties("app.datasource.mariadb-primary")
     public DataSourceProperties primaryDataSourceProperties() {
         System.out.println("Creating PrimaryDataSourceProperties");
         return new DataSourceProperties();
     }
 
     @Bean
+    @Scope("singleton")
     @DependsOn("primaryDataSourceProperties")
     public DataSource primaryDataSource(@Qualifier("primaryDataSourceProperties") DataSourceProperties primaryDataSourceProperties) {
         
@@ -66,15 +77,64 @@ public class DataSourceConfiguration {
     }
 
     @Bean
+    @Scope("singleton")
     @DependsOn("primaryDataSource")
     JdbcClient primaryJdbcClient(@Qualifier("primaryDataSource") DataSource dataSource) {
         System.out.println("In primaryJdbcClient creation");
         return JdbcClient.create(dataSource);
     }
 
+    // Redis Primary Database ====================================================================================================
+    
+    @Bean
+    @Scope("singleton")
+    @Primary
+    @ConfigurationProperties("app.datasource.redis-primary")
+    public RedisProperties primaryRedisProperties() {
+        return new RedisProperties();
+    }
+
+    @Bean
+    @Scope("singleton")
+    @Primary
+    @DependsOn("primaryRedisProperties")
+    public LettuceConnectionFactory primaryRedisConnectionFactory(@Qualifier("primaryRedisProperties") RedisProperties redisProperties) {
+        System.out.println("In redisConnectionFactory creation with properties: " 
+        + " Host: " + redisProperties.getHost()
+        + " Port: " + redisProperties.getPort()
+        + " Username: " + redisProperties.getUsername()
+        + " Password: " + redisProperties.getPassword()
+        );
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+        redisStandaloneConfiguration.setHostName(redisProperties.getHost());
+        redisStandaloneConfiguration.setPort(redisProperties.getPort());
+        // Set the username if provided
+        if (redisProperties.getUsername() != null && !redisProperties.getUsername().isEmpty()) {
+            redisStandaloneConfiguration.setUsername(redisProperties.getUsername());
+        }
+        redisStandaloneConfiguration.setPassword(redisProperties.getPassword());
+        // Explicitly initialize the connection factory here to catch any issues
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(redisStandaloneConfiguration);
+        factory.afterPropertiesSet(); // This forces the factory to initialize immediately
+        return factory;
+    }
+
+    @Bean
+    @Scope("singleton")
+    @DependsOn("primaryRedisConnectionFactory") // IMPORTANT!!  The first redis template MUST be named redisTemplate, or everything breaks.
+    public RedisTemplate<String, String> redisTemplate(@Qualifier("primaryRedisConnectionFactory") RedisConnectionFactory redisConnectionFactory) {
+        System.out.println("In redisTemplate creation");
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        System.out.println("After redisTemplate creation");
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        System.out.println("After setConnectionFactory");
+        return redisTemplate;
+    }
+    
     // CONTEXT DATABASE ====================================================================================================
 
     @Bean
+    @Scope("singleton")
     @ConfigurationProperties("app.datasource.context")
     @DependsOn("primaryJdbcClient") // The context datasource depends on the primary mariadb database existing.
     public DataSourceProperties contextDataSourceProperties() {
@@ -84,6 +144,7 @@ public class DataSourceConfiguration {
     }
 
     @Bean
+    @Scope("singleton")
     @DependsOn("contextDataSourceProperties")
     public DataSource contextDataSource(@Qualifier("contextDataSourceProperties") DataSourceProperties contextDataSourceProperties) {
         System.out.println("In contextDataSourceProperties creation with properties: " 
@@ -102,6 +163,7 @@ public class DataSourceConfiguration {
     }
 
 	@Bean
+    @Scope("singleton")
     @DependsOn("contextDataSource")
 	JdbcClient contextJdbcClient(@Qualifier("contextDataSource") DataSource dataSource) {
         System.out.println("In contextJdbcClient creation");
@@ -111,6 +173,7 @@ public class DataSourceConfiguration {
     // LOCATION DATABASE ====================================================================================================
 
     @Bean
+    @Scope("singleton")
     @ConfigurationProperties("app.datasource.location")
     @DependsOn("primaryJdbcClient") // The location datasource depends on the primary mariadb database existing.
     public DataSourceProperties locationDataSourceProperties() {
@@ -119,6 +182,7 @@ public class DataSourceConfiguration {
     }
 
     @Bean
+    @Scope("singleton")
     @DependsOn("locationDataSourceProperties")
     public DataSource locationDataSource(@Qualifier("locationDataSourceProperties") DataSourceProperties locationDataSourceProperties) {
         System.out.println("In locationDataSourceProperties creation with properties: " 
@@ -137,59 +201,132 @@ public class DataSourceConfiguration {
     }
 
 	@Bean
+    @Scope("singleton")
     @DependsOn("locationDataSource")
 	JdbcClient locationJdbcClient(@Qualifier("locationDataSource") DataSource dataSource) {
         System.out.println("In locationJdbcClient creation");
 		return JdbcClient.create(dataSource);
 	}
 
-    // DATABASE INITIALIZATION ============================================================================================
-
-    public class DatabaseInitializer {
-        // Let us define a boolean value indicating whether the initialization was successful.
-        private boolean initialized = false;
-        private boolean failedInitialization = false;
-
-    }
-
-    // Call initializers for all data sources using DatabaseInitializer class.
-    // jdbcClients do not need to be passed because they are defined via @Qualifier in the DatabaseInitializer class.
+    // GeoLocation Database ====================================================================================================
+    
     @Bean
     @Scope("singleton")
-    @DependsOn({"contextJdbcClient", "locationJdbcClient"})
-    public DatabaseInitializer databaseInitializer(
-        @Qualifier("contextJdbcClient") JdbcClient contextJdbcClient,
-        @Qualifier("locationJdbcClient") JdbcClient locationJdbcClient
-        ) 
-    {
-        DatabaseInitializer databaseInitializer = new DatabaseInitializer();
-        System.out.println("In databaseInitializer");
-        // I need these initializers to run and then detect if they completed successfully
-        // if all completed successfully, then I can start the application.
-        
+    @ConfigurationProperties("app.datasource.geolocation")
+    @DependsOn("redisTemplate") // The geoLocation datasource depends on the primary redis database existing.
+    public RedisProperties geoLocationDataSourceProperties() {
+        System.out.println("Creating GeoLocationDataSourceProperties");
+        return new RedisProperties();
+    }
 
-        // Initialize context database
-        ContextDatasourceInitializer contextInitializer = new ContextDatasourceInitializer(
-            contextJdbcClient,
-            this.applicationContext
+    
+    @Bean
+    @Scope("singleton")
+    @DependsOn("geoLocationDataSourceProperties")
+    public LettuceConnectionFactory geoLocationDataSource(@Qualifier("geoLocationDataSourceProperties") RedisProperties redisProperties) {
+        System.out.println("In redisConnectionFactory creation with properties: " 
+        + " Host: " + redisProperties.getHost()
+        + " Port: " + redisProperties.getPort()
+        + " Username: " + redisProperties.getUsername()
+        + " Password: " + redisProperties.getPassword()
         );
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+        redisStandaloneConfiguration.setHostName(redisProperties.getHost());
+        redisStandaloneConfiguration.setPort(redisProperties.getPort());
+        // Set the username if provided
+        if (redisProperties.getUsername() != null && !redisProperties.getUsername().isEmpty()) {
+            redisStandaloneConfiguration.setUsername(redisProperties.getUsername());
+        }
+        redisStandaloneConfiguration.setPassword(redisProperties.getPassword());
+        return new LettuceConnectionFactory(redisStandaloneConfiguration);
+    }
         
-        boolean contextInitSuccess = contextInitializer.initialize();
+    
+    @Bean
+    @Scope("singleton")
+    @DependsOn("geoLocationDataSource")
+    public RedisTemplate<String, String> geoLocationRedisClient(@Qualifier("geoLocationDataSource") RedisConnectionFactory redisConnectionFactory) {
+        System.out.println("In geoLocationDataSource creation");
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<String, String>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        return redisTemplate;
+    }
+    
 
-        // Initialize location database
-        LocationDatasourceInitializer locationInitializer = new LocationDatasourceInitializer(
-            locationJdbcClient,
-            this.applicationContext
+    // DATABASE INITIALIZATION ============================================================================================
+
+    public class DatabaseInitializer 
+    {
+        // Let us define a boolean value indicating whether the initialization was successful.
+        @Autowired
+        private InitializationState initializationState;
+
+        private ScoringDatasourceInitializer scoringDatasourceInitializer = null;
+
+        private LocationDatasourceInitializer locationDatasourceInitializer = null;
+
+        private GeoLocationDatasourceInitializer geoLocationDatasourceInitializer = null;
+
+        // Call initializers for all data sources using DatabaseInitializer class.
+        // jdbcClients do not need to be passed because they are defined via @Qualifier in the DatabaseInitializer class.
+        @Bean
+        @Scope("singleton")
+        @DependsOn({"primaryJdbcClient"})
+        public DatabaseInitializer databaseInitializer(
+            @Qualifier("primaryJdbcClient") JdbcClient primaryJdbcClient,
+            @Qualifier("redisTemplate") RedisTemplate<String, String> primaryRedisTemplate
+            ) 
+        {
+            DatabaseInitializer databaseInitializer = new DatabaseInitializer();
+            System.out.println("In databaseInitializer");
+            // I need these initializers to run and then detect if they completed successfully
+            // if all completed successfully, then I can start the application.
+            
+            // Initialize context database
+            scoringDatasourceInitializer = new ScoringDatasourceInitializer(
+                primaryJdbcClient,
+                applicationContext,
+                initializationState
             );
 
-        boolean locationInitSuccess = locationInitializer.initialize();
-
-        // Check if all initializations were successful
-        if (contextInitSuccess && locationInitSuccess) {
-            System.out.println("All initializers completed successfully. Application can start.");
-        } else {
-            throw new RuntimeException("Database initialization failed. Application startup aborted.");
+            // Initialize location database
+            locationDatasourceInitializer = new LocationDatasourceInitializer(
+                primaryJdbcClient,
+                applicationContext,
+                initializationState
+                );
+            
+            geoLocationDatasourceInitializer = new GeoLocationDatasourceInitializer(
+                primaryRedisTemplate,
+                applicationContext,
+                initializationState
+            );
+            
+            return databaseInitializer;
         }
-        return databaseInitializer;
+
+        @Bean
+        @Scope("singleton")
+        @DependsOn({"databaseInitializer", "locationJdbcClient", "contextJdbcClient", "geoLocationRedisClient"})
+        public DatabaseInitializer databaseTablesInitializer(
+            @Qualifier("databaseInitializer") DatabaseInitializer dbInit
+            ) 
+        {
+            System.out.println("Hit DatabaseTablesInitializer");
+            System.out.println("InitializationState: " + initializationState);
+            // Check if all initializations were successful
+            if (
+                initializationState.isInitializedScoringDatabase() && 
+                initializationState.isInitializedLocationDatabase() &&
+                initializationState.isInitializedGeoLocationDatabase()
+                ) 
+                {
+                scoringDatasourceInitializer.initialize();
+                locationDatasourceInitializer.initialize();
+                geoLocationDatasourceInitializer.initialize();
+                System.out.println("All initializers completed successfully. Application can start.");
+            }
+            return dbInit;
+        }
     }
 }

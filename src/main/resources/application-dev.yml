@@ -1,0 +1,38 @@
+# political-scorecard-backend/src/main/resources/application-local.yml
+# This file is used to define the local environment configuration for the application, and is the default configuration file
+# used when running the application.  This is because a production environment requires a custom configuration file to be secure
+# and if the user cannot figure that part out, they should not be running the application in production mode.
+spring:
+  config:
+    activate:
+      on-profile: dev
+app: # Default Application-specific build configuration goes here
+  datasource:
+    mariadb-primary:
+      db_name: mysql  # mysql is the name of the base database for Database Administration on mariadb containers.
+      url: jdbc:mariadb://psc-mariadb:3306/mysql
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
+    redis-primary:
+      host: psc-redis
+      port: 6379
+      username: psc-server
+      password: pscpassword
+    context:
+      db_name: psc_context_db
+      url: jdbc:mariadb://psc-mariadb:3306/psc_context_db
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
+    location:
+      db_name: psc_location_db
+      url: jdbc:mariadb://psc-mariadb:3306/psc_location_db
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
+    geolocation:
+      host: psc-redis
+      port: 6379
+      username: psc-server
+      password: pscpassword

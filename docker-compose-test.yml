@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  psc-mariadb-test:
+    image: mariadb:latest
+    container_name: psc-mariadb-test
+    env_file: test.env  # Specify a separate test.env file for testing environment variables
+    environment:
+      - MARIADB_ROOT_PASSWORD=test_root_password
+    ports:
+      - "3801:3306"  # Different port for test mariadb
+    volumes:
+      # Ephemeral volumes so data is not retained between test runs
+      - /var/lib/mysql
+      - ./mariadb/test-init.sql:/docker-entrypoint-initdb.d/test-init.sql
+
+  political-scorecard-backend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"  # Different port for test backend
+    volumes:
+      - .:/app
+    env_file: .env.test  # Use test.env file for testing environment variables
+    environment:
+      # General Spring Boot environment variables for testing
+      - SPRING_PROFILES_ACTIVE=test
+      # Database connection environment variables for primary database in the test environment
+      - SPRING_PRIMARY_DATASOURCE_DB_NAME=test_primary_db
+      - SPRING_PRIMARY_DATASOURCE_URL
+      - SPRING_PRIMARY_DATASOURCE_USERNAME=test_primary_user
+      - SPRING_PRIMARY_DATASOURCE_PASSWORD=test_primary_password
+      - SPRING_PRIMARY_DATASOURCE_DRIVER_CLASS_NAME
+      # Database connection environment variables for context database in the test environment
+      - SPRING_CONTEXT_DATASOURCE_DB_NAME=test_context_db
+      - SPRING_CONTEXT_DATASOURCE_URL
+      - SPRING_CONTEXT_DATASOURCE_USERNAME=test_context_user
+      - SPRING_CONTEXT_DATASOURCE_PASSWORD=test_context_password
+      - SPRING_CONTEXT_DATASOURCE_DRIVER_CLASS_NAME
+      # Database connection environment variables for location database in the test environment
+      - SPRING_LOCATION_DATASOURCE_DB_NAME=test_location_db
+      - SPRING_LOCATION_DATASOURCE_URL
+      - SPRING_LOCATION_DATASOURCE_USERNAME=test_location_user
+      - SPRING_LOCATION_DATASOURCE_PASSWORD=test_location_password
+      - SPRING_LOCATION_DATASOURCE_DRIVER_CLASS_NAME
+    command: ./startup_shell/test_startup.sh  # Test-specific startup script
+    depends_on:
+      - psc-mariadb-test
+
+volumes:
+  # No persistent volumes, we use ephemeral storage for testing
+  db-data-test:

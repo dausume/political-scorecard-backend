@@ -50,36 +50,27 @@ public class PlanetController
     // READ
     // Used to retrieve all Planet Objects.
     @GetMapping("all")
-    public List<PlanetDTO> getAllPlanets() {
+    public ApiResponse<List<PlanetDTO>> getAllPlanets() {
         return planetService.getAllPlanets();
     }
 
     // Used to retrieve a single Planet Object, if the id sent has a corresponding planet object.
     @GetMapping("{id}")
-    public PlanetDTO getPlanet(@PathVariable String id) {
+    public ApiResponse<PlanetDTO> getPlanet(@PathVariable String id) {
         return planetService.getPlanet(id);
     }
 
     // UPDATE
     // Used to update a Single Planet Object.
     @PostMapping("update")
-    public String updatePlanet(@RequestBody PlanetDTO planetDTO) {
-        if (planetService.updatePlanet(planetDTO)) {
-            return "Planet updated successfully!";
-        } else {
-            return "Failed to update planet.";
-        }
+    public ApiResponse<PlanetDTO> updatePlanet(@RequestBody PlanetDTO planetDTO) {
+        return planetService.updatePlanet(planetDTO);
     }
 
     // DELETE
     // Used to delete a Single Planet Object.
     @DeleteMapping("delete/{id}")
-    public String deletePlanet(@PathVariable String id) {
-        if (planetService.deletePlanet(id)) {
-            return "Planet deleted successfully!";
-        } else {
-            return "Failed to delete planet.";
-        }
+    public ApiResponse<PlanetDTO> deletePlanet(@PathVariable String id) {
+       return planetService.deletePlanet(id);
     }
-    
 }

@@ -1,20 +1,6 @@
-app:
-  datasource:
-    primary:
-      db_name: mysql
-      url: jdbc:mariadb://psc-mariadb:3306/mysql
-      username: psc-scorecard-server
-      password: test
-      driver-class-name: org.mariadb.jdbc.Driver
-    context:
-      db_name: psc_context_db
-      url: jdbc:mariadb://psc-mariadb:3306/psc_context_db
-      username: psc-scorecard-server
-      password: test
-      driver-class-name: org.mariadb.jdbc.Driver
-    location:
-      db_name: psc_location_db
-      url: jdbc:mariadb://psc-mariadb:3306/psc_location_db
-      username: psc-scorecard-server
-      password: test
-      driver-class-name: org.mariadb.jdbc.Driver
+# political-scorecard-backend/src/main/resources/application.yml
+spring:
+  application:
+    name: political-scorecard-backend
+  profiles: # Note: Can activate multiple profiles by separating them with a comma, ex: "local,test".
+    active: ${SPRING_PROFILES_ACTIVE:dev} # Activates the configuration profiles based on the SPRING_PROFILES_ACTIVE environment variable

@@ -44,79 +44,86 @@ public class PlanetDAO extends AbstractDAO<PlanetDTO> {
                       .update();
             if (rowsAffected > 0) 
             {
-                return new ApiResponse<>(true, "Nation created successfully", dto);
+                return new ApiResponse<PlanetDTO>(true, "Nation created successfully", dto);
             } 
             else 
             {
-                return new ApiResponse<>(false, "Failed to create nation in the NationDAO.", dto);
+                return new ApiResponse<PlanetDTO>(false, "Failed to create nation in the NationDAO.", dto);
             }
         } catch (Exception e) 
         {
             logger.log(Level.SEVERE, "Error creating planet: ", e);
-            return new ApiResponse<>(false, "Error creating nation: " + e.getMessage(), dto);
+            return new ApiResponse<PlanetDTO>(false, "Error creating nation: " + e.getMessage(), dto);
         }
     }
 
     @Override
-    public PlanetDTO read(String id) {
+    public ApiResponse<PlanetDTO> read(String id) {
         System.out.println("Reading Planet object with id : " + id);
         String query = "SELECT * FROM planet WHERE id = ?";
         try {
-            // reimplement using jdbcClient
             PlanetDTO dto = jdbcClient.sql(query)
                                      .params(List.of(id))
                                      .query(PlanetDTO.class)
                                      .single();
-            System.out.println("Got DTO List");
-            System.out.println(dto);
-            logger.log(Level.SEVERE, "Error: Query returned multiple Planets, should only be returning one.");
-            return null;
-        } catch (Exception e)
-        {
+            if (dto != null) {
+                return new ApiResponse<PlanetDTO>(true, "Planet found successfully", dto);
+            } else {
+                return new ApiResponse<PlanetDTO>(false, "Planet not found with the given ID.", null);
+            }
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Error reading planet: ", e);
-            return null;
+            return new ApiResponse<PlanetDTO>(false, "Error reading planet: " + e.getMessage(), null);
         }
     }
 
     @Override
-    public List<PlanetDTO> readAll() {
+    public ApiResponse<List<PlanetDTO>> readAll() {
         String query = "SELECT * FROM planet";
         try {
             List<PlanetDTO> allPlanets = jdbcClient.sql(query)
                                                    .query(PlanetDTO.class)
                                                    .list();
-            return allPlanets;
+            return new ApiResponse<List<PlanetDTO>>(true, "All planets retrieved successfully", allPlanets);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error reading all planets: ", e);
-            return null;
+            return new ApiResponse<List<PlanetDTO>>(false, "Error reading all planets: " + e.getMessage(), null);
         }
     }
 
     @Override
-    public boolean update(PlanetDTO dto) {
+    public ApiResponse<PlanetDTO> update(PlanetDTO dto) {
         String query = "UPDATE planet SET planet_name = ? WHERE id = ?";
         try {
-            jdbcClient.sql(query)
-                      .params(List.of(dto.getPlanetName(), dto.getId()))
-                      .update();
-            return true;
+            int rowsAffected = jdbcClient.sql(query)
+                                         .params(List.of(dto.getPlanetName(), dto.getId()))
+                                         .update();
+            if (rowsAffected > 0) {
+                return new ApiResponse<PlanetDTO>(true, "Planet updated successfully", dto);
+            } else {
+                return new ApiResponse<PlanetDTO>(false, "Failed to update planet.", dto);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error updating planet: ", e);
-            return false;
+            return new ApiResponse<PlanetDTO>(false, "Error updating planet: " + e.getMessage(), dto);
         }
     }
 
     @Override
-    public boolean delete(String id) {
+    public ApiResponse<PlanetDTO> delete(String id) {
         String query = "DELETE FROM planet WHERE id = ?";
         try {
-            jdbcClient.sql(query)
-                      .params(List.of(id))
-                      .update();
-            return true;
+            int rowsAffected = jdbcClient.sql(query)
+                                         .params(List.of(id))
+                                         .update();
+            if (rowsAffected > 0) {
+                return new ApiResponse<PlanetDTO>(true, "Planet deleted successfully", null);
+            } else {
+                return new ApiResponse<PlanetDTO>(false, "Failed to delete planet.", null);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error deleting planet: ", e);
-            return false;
+            return new ApiResponse<PlanetDTO>(false, "Error deleting planet: " + e.getMessage(), null);
         }
     }
 }

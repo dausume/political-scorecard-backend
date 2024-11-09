@@ -5,6 +5,7 @@ package com.asc.politicalscorecard;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,34 +14,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
+import org.springframework.beans.factory.annotation.Value;
+
+
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Component
-class ApplicationStartup {
-	//private final DatabaseService databaseService;
 
-    @Autowired
-    public ApplicationStartup() {
-        //DatabaseService databaseService
-		System.out.println("Creating ApplicationStartup");
-        //this.databaseService = databaseService;
-    }
-
-    @PostConstruct
-    public void onStartup() {
-		System.out.println("Hit onStartup");
-        //databaseService.performDatabaseOperation();
-    }
-}
 
 @SpringBootApplication(
     exclude = { // We exclude auto-configuration for jpa because it does not support strictly defined data sources and will break.
     HibernateJpaAutoConfiguration.class,
-    JpaRepositoriesAutoConfiguration.class
+    JpaRepositoriesAutoConfiguration.class,
+	RedisAutoConfiguration.class
 }
 )
 @ComponentScan // Note: If you do not use the @Component or @Configuration decorator, the app will not load whatever you made.
 public class PoliticalScorecardApplication {
+
+	@Value("${RUN_TESTS:false}")  // Default to false if not set, disables or enables testing the application.
+    private boolean runTests;
 
 	public static void main(String[] args) {
 		SpringApplication.run(PoliticalScorecardApplication.class, args);
@@ -60,3 +52,20 @@ public class PoliticalScorecardApplication {
 	}
 }
 
+@Component
+class ApplicationStartup {
+	//private final DatabaseService databaseService;
+
+    @Autowired
+    public ApplicationStartup() {
+        //DatabaseService databaseService
+		System.out.println("Creating ApplicationStartup");
+        //this.databaseService = databaseService;
+    }
+
+    @PostConstruct
+    public void onStartup() {
+		System.out.println("Hit onStartup");
+        //databaseService.performDatabaseOperation();
+    }
+}

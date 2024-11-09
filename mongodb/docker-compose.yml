@@ -1,8 +1,0 @@
-services:
-  mongodb:
-    image: mongo
-    ports:
-    - '27017:27017'
-    volumes:
-    - ./data:/data/db
-    - ./mongo-seed:/docker-entrypoint-initdb.d

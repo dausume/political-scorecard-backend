@@ -1,7 +1,9 @@
 package com.asc.politicalscorecard.objects.scoring.competitors;
 
 // A category of competitors.
-public class CompetitorCategory {
+// Examples : States, Businesses, Countries, Political Parties, etc.
+public class CompetitorCategory 
+{
     // The id of the category.
     private String id;
 
@@ -16,4 +18,6 @@ public class CompetitorCategory {
 
     // The id of the category's highest level ancestor, if applicable.
     private String ancestorId;
+
+    
 }

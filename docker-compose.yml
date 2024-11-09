@@ -1,38 +1,40 @@
 services:
   psc-mariadb:
-    image: mariadb:11.5.1-ubi-rc
+    image: mariadb:latest
     container_name: psc-mariadb
     env_file: .env  # Specify the .env file to use to define environment variables
     environment:
       - MARIADB_ROOT_PASSWORD=root_password
       # We set the political-scorecard-backend to use the base SQL database to create the context and location databases and all others.
       # Therefore, no need to create a default database here.
-      #- MYSQL_DATABASE=your_database_name
-      #- MYSQL_USER=root
-      #- MYSQL_PASSWORD=root_password
+      # The user access for the server is set in the init.sql file which is mounted to the container via a volume.
     ports:
       - "3800:3306"
+    networks:
+      - psc-network
     volumes:
       - db-data:/var/lib/mysql
       - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  psc-backend-couchdb:
-    image: couchdb:3.3.3
-    restart: always
+  psc-redis:
+    build: ./redis
+    container_name: psc-redis
     ports:
-      - "5984:5984"
-    environment:
-      - COUCHDB_USER=admin
-      - COUCHDB_PASSWORD=YOURPASSWORD
+      - "6379:6379"
     volumes:
-        - ./couchdb/dbdata:/opt/couchdb/data
+      - psc_redis_data:/data
+    networks:
+      - psc-network
 
   political-scorecard-backend:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: psc-backend
     ports:
       - "8080:8080"
+    networks:
+      - psc-network
     volumes:
       - .:/app
     env_file: .env  # Specify the .env file to use to define environment variables
@@ -66,7 +68,12 @@ services:
     command: ./startup_shell/startup_shell.sh
     depends_on:
       - psc-mariadb
-      - psc-backend-couchdb
+      - psc-redis
 
 volumes:
   db-data:
+  psc_redis_data:
+
+networks:
+  psc-network:
+    driver: bridge

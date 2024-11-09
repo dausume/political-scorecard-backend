@@ -1,5 +1,6 @@
 package com.asc.politicalscorecard.services.nationservices;
 
+import com.asc.politicalscorecard.controllers.responses.ApiResponse;
 import com.asc.politicalscorecard.databases.daos.nationdaos.NationWithPlanetDAO;
 import com.asc.politicalscorecard.json.dtos.nationdto.NationWithPlanetDTO;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ public class NationWithPlanetService {
         this.nationWithPlanetDAO = nationWithPlanetDAO;
     }
 
-    public NationWithPlanetDTO getNationWithPlanetById(String id) {
+    public ApiResponse<NationWithPlanetDTO> getNationWithPlanetById(String id) {
         return nationWithPlanetDAO.findById(id);
     }
 }

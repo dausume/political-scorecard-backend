@@ -25,24 +25,20 @@ public class NationService {
         return nationDAO.create(nationDTO);
     }
 
-    public NationDTO getNationById(String id) {
-        NationDTO nation = nationDAO.read(id);
-        return nation != null ? new NationDTO(nation.getId(), nation.getNationName(), nation.getHomePlanetId()) : null;
+    public ApiResponse<NationDTO> getNationById(String id) {
+        return nationDAO.read(id);
     }
 
-    public List<NationDTO> getAllNations() {
-        List<NationDTO> nations = nationDAO.readAll();
-        return nations.stream()
-                .map(nation -> new NationDTO(nation.getId(), nation.getNationName(), nation.getHomePlanetId()))
-                .collect(Collectors.toList());
+    public ApiResponse<List<NationDTO>> getAllNations() {
+        return nationDAO.readAll();
     }
 
-    public boolean updateNation(NationDTO nationDTO) {
+    public ApiResponse<NationDTO> updateNation(NationDTO nationDTO) {
         System.out.println("In update Nation");
         return nationDAO.update(nationDTO);
     }
 
-    public boolean deleteNation(String id) {
+    public ApiResponse<NationDTO> deleteNation(String id) {
         return nationDAO.delete(id);
     }
 }

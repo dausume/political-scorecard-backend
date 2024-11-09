@@ -1,0 +1,26 @@
+# political-scorecard-backend/src/main/resources/application-test.yml
+
+spring:
+  config:
+    activate:
+      on-profile: test
+app: # Test-specific app configuration goes here (e.g., in-memory DB or test-specific services)
+  datasource:
+    primary:
+      db_name: mysql  # mysql is the name of the base database for Database Administration on mariadb containers.
+      url: jdbc:mariadb://psc-mariadb-test:3306/mysql
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
+    context:
+      db_name: psc_context_db_test
+      url: jdbc:mariadb://psc-mariadb-test:3306/psc_context_db_test
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
+    location:
+      db_name: psc_location_db_test
+      url: jdbc:mariadb://psc-mariadb:3306/psc_location_db_test
+      username: psc-scorecard-server
+      password: test
+      driver-class-name: org.mariadb.jdbc.Driver
