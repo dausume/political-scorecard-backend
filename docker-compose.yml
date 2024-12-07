@@ -35,36 +35,10 @@ services:
       - "8080:8080"
     networks:
       - psc-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
     volumes:
       - .:/app
-    env_file: .env  # Specify the .env file to use to define environment variables
-    environment:
-      # General Spring Boot environment variables
-      - SPRING_PROFILES_ACTIVE=dev
-      # Database connection environment variables for primary database
-      - SPRING_PRIMARY_DATASOURCE_DB_NAME
-      - SPRING_PRIMARY_DATASOURCE_URL
-      - SPRING_PRIMARY_DATASOURCE_USERNAME
-      - SPRING_PRIMARY_DATASOURCE_PASSWORD
-      - SPRING_PRIMARY_DATASOURCE_DRIVER_CLASS_NAME
-      # Database connection environment variables for primary database
-      - MARIADB_PSC_DATABASE_DB_NAME
-      - MARIADB_PSC_DATABASE_URL
-      - MARIADB_PSC_DATABASE_USERNAME
-      - MARIADB_PSC_DATABASE_PASSWORD
-      - MARIADB_PSC_DATABASE_DRIVER_CLASS_NAME
-      # Database connection environment variables for context database
-      - SPRING_CONTEXT_DATASOURCE_DB_NAME
-      - SPRING_CONTEXT_DATASOURCE_URL
-      - SPRING_CONTEXT_DATASOURCE_USERNAME
-      - SPRING_CONTEXT_DATASOURCE_PASSWORD
-      - SPRING_CONTEXT_DATASOURCE_DRIVER_CLASS_NAME
-      # Database connection environment variables for location database
-      - SPRING_LOCATION_DATASOURCE_DB_NAME
-      - SPRING_LOCATION_DATASOURCE_URL
-      - SPRING_LOCATION_DATASOURCE_USERNAME
-      - SPRING_LOCATION_DATASOURCE_PASSWORD
-      - SPRING_LOCATION_DATASOURCE_DRIVER_CLASS_NAME
     command: ./startup_shell/startup_shell.sh
     depends_on:
       - psc-mariadb

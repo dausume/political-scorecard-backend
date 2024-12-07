@@ -10,114 +10,165 @@ public class InitializationState {
 
     // MariaDB Databases
 
-    private boolean initializedContextDatabase = false;
-    private boolean initializedContextTables = false;
-
     private boolean initializedLocationDatabase = false;
     private boolean initializedLocationTables = false;
+    private String locationDatabaseName = "";
 
     private boolean initializedScoringDatabase = false;
     private boolean initializedScoringTables = false;
+    private String scoringDatabaseName = "";
 
     // Redis Databases
 
     private boolean initializedGeoLocationDatabase = false;
     private boolean initializedGeoLocationTables = false;
+    private String geoLocationDatabaseName = "";
 
-    // -- Getters
+    // -- Database Initialization Getters
 
-    public boolean isInitialized() {
-        return initializedDatabases && initializedTables;
+    public synchronized boolean isInitializedDatabases() {
+        return initializedScoringDatabase && initializedLocationDatabase && initializedGeoLocationDatabase;
     }
 
-    public boolean isInitializedContext() {
-        return initializedContextDatabase && initializedContextTables;
-    }
-
-    public boolean isInitializedLocation() {
-        return initializedLocationDatabase && initializedLocationTables;
-    }
-
-    public boolean isInitializedTables() {
-        return initializedTables;
-    }
-
-    public boolean isInitializedContextDatabase() {
-        return initializedContextDatabase;
-    }
-
-    public boolean isInitializedDatabases() {
-        return initializedDatabases;
-    }
-
-    public boolean isInitializedLocationDatabase() {
+    public synchronized boolean isInitializedLocationDatabase() {
         return initializedLocationDatabase;
     }
 
-    public boolean isInitializedLocationTables() {
-        return initializedLocationTables;
-    }
-
-    public boolean isInitializedContextTables() {
-        return initializedContextTables;
-    }
-
-    public boolean isInitializedScoringDatabase() {
+    public synchronized boolean isInitializedScoringDatabase() {
         return initializedScoringDatabase;
     }
 
-    public boolean isInitializedScoringTables() {
-        return initializedScoringTables;
-    }
-
-    public boolean isInitializedGeoLocationDatabase() {
+    public synchronized boolean isInitializedGeoLocationDatabase() {
         return initializedGeoLocationDatabase;
     }
 
-    public boolean isInitializedGeoLocationTables() {
+    // -- table initialization getters
+
+    public synchronized boolean isInitializedTables() {
+        return initializedLocationTables && initializedScoringTables && initializedGeoLocationTables;
+    }
+
+    public synchronized boolean isInitializedLocationTables() {
+        return initializedLocationTables;
+    }
+
+    public synchronized boolean isInitializedScoringTables() {
+        return initializedScoringTables;
+    }
+
+    public synchronized boolean isInitializedGeoLocationTables() {
         return initializedGeoLocationTables;
     }
 
-    // -- Setters
+    // -- Database Initialization Setters
 
-    public void setInitializedDatabases(boolean initializedDatabases) {
-        this.initializedDatabases = initializedDatabases;
-    }
-
-    public void setInitializedTables(boolean initializedTables) {
-        this.initializedTables = initializedTables;
-    }
-
-    public void setInitializedContextDatabase(boolean initializedContextDatabase) {
-        this.initializedContextDatabase = initializedContextDatabase;
-    }
-
-    public void setInitializedContextTables(boolean initializedContextTables) {
-        this.initializedContextTables = initializedContextTables;
-    }
-
-    public void setInitializedLocationDatabase(boolean initializedLocationDatabase) {
+    public synchronized void setInitializedLocationDatabase(boolean initializedLocationDatabase) {
+        System.out.println("Setting initializedLocationDatabase");
         this.initializedLocationDatabase = initializedLocationDatabase;
+        checkAndNotifyDatabaseInitialization();
     }
 
-    public void setInitializedLocationTables(boolean initializedLocationTables) {
-        this.initializedLocationTables = initializedLocationTables;
-    }
-
-    public void setInitializedScoringDatabase(boolean initializedScoringDatabase) {
+    public synchronized void setInitializedScoringDatabase(boolean initializedScoringDatabase) {
+        System.out.println("Setting initializedScoringDatabase");
         this.initializedScoringDatabase = initializedScoringDatabase;
+        checkAndNotifyDatabaseInitialization();
     }
 
-    public void setInitializedScoringTables(boolean initializedScoringTables) {
-        this.initializedScoringTables = initializedScoringTables;
-    }
-
-    public void setInitializedGeoLocationDatabase(boolean initializedGeoLocationDatabase) {
+    public synchronized void setInitializedGeoLocationDatabase(boolean initializedGeoLocationDatabase) {
+        System.out.println("Setting initializedGeoLocationDatabase");
         this.initializedGeoLocationDatabase = initializedGeoLocationDatabase;
+        checkAndNotifyDatabaseInitialization();
     }
 
-    public void setInitializedGeoLocationTables(boolean initializedGeoLocationTables) {
+    // -- Table Initialization Setters
+
+    public synchronized void setInitializedLocationTables(boolean initializedLocationTables) {
+        this.initializedLocationTables = initializedLocationTables;
+        checkAndNotifyTableInitialization();
+    }
+
+    public synchronized void setInitializedScoringTables(boolean initializedScoringTables) {
+        this.initializedScoringTables = initializedScoringTables;
+        checkAndNotifyTableInitialization();
+    }
+
+    public synchronized void setInitializedGeoLocationTables(boolean initializedGeoLocationTables) {
         this.initializedGeoLocationTables = initializedGeoLocationTables;
+        checkAndNotifyTableInitialization();
+    }
+
+    // -- Database Name Getters
+
+    public synchronized String getLocationDatabaseName() {
+        return locationDatabaseName;
+    }
+
+    public synchronized String getScoringDatabaseName() {
+        return scoringDatabaseName;
+    }
+
+    public synchronized String getGeoLocationDatabaseName() {
+        return geoLocationDatabaseName;
+    }
+
+    // -- Database Name Setters
+
+    public void setLocationDatabaseName(String locationDatabaseName) {
+        this.locationDatabaseName = locationDatabaseName;
+    }
+
+    public void setScoringDatabaseName(String scoringDatabaseName) {
+        this.scoringDatabaseName = scoringDatabaseName;
+    }
+
+    public void setGeoLocationDatabaseName(String geoLocationDatabaseName) {
+        this.geoLocationDatabaseName = geoLocationDatabaseName;
+    }
+
+    // -- Synchronization Methods --
+
+    public synchronized void waitForDatabaseInitializations() throws InterruptedException {
+        System.out.println("Waiting for database initializations.");
+        while (!isInitializedDatabases()) {
+            wait();
+        }
+    }
+
+    public synchronized void waitForTableInitializations() throws InterruptedException {
+        System.out.println("Waiting for table initializations.");
+        while (!isInitializedTables()) {
+            wait();
+        }
+    }
+
+    private synchronized void checkAndNotifyDatabaseInitialization() {
+        System.out.println("Checking if all databases are initialized.");
+        System.out.println("Location Database: " + initializedLocationDatabase);
+        System.out.println("Scoring Database: " + initializedScoringDatabase);
+        System.out.println("GeoLocation Database: " + initializedGeoLocationDatabase);
+        if (isInitializedDatabases()) {
+            notifyAllDatabasesReady();
+        }
+    }
+
+    private synchronized void checkAndNotifyTableInitialization() {
+        System.out.println("Checking if all tables are initialized.");
+        System.out.println("Location Tables: " + initializedLocationTables);
+        System.out.println("GeoLocation Tables: " + initializedGeoLocationTables);
+        System.out.println("Scoring Tables: " + initializedScoringTables);
+        if (isInitializedTables()) {
+            notifyAllTablesReady();
+        }
+    }
+
+    private synchronized void notifyAllDatabasesReady() {
+        System.out.println("All databases initialized. Notifying waiting threads.");
+        notifyAll();
+    }
+
+    private synchronized void notifyAllTablesReady() {
+        System.out.println("All tables initialized. Notifying waiting threads.");
+        notifyAll();
     }
 
 }

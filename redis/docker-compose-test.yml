@@ -1,0 +1,21 @@
+# political-scorecard-backend/redis/docker-compose-test.yml
+services:
+  redis-test:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: psc-redis-test
+    ports:
+      - "6800:6800"
+    volumes:
+      - psc_redis_data_test:/data
+    networks:
+      - redis_network_test
+
+volumes:
+  psc_redis_data_test:
+    driver: local
+
+networks:
+  redis_network_test:
+    driver: bridge

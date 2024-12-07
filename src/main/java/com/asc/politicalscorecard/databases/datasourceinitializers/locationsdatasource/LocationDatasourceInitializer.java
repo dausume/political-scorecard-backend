@@ -21,7 +21,7 @@ public class LocationDatasourceInitializer {
 
     private final ApplicationContext applicationContext;
     private final JdbcClient primaryJdbcClient;
-    private String locationDatabaseName = "psc_location_db";
+    private String locationDatabaseName = "";
     private InitializationState initializationState;
 
     public LocationDatasourceInitializer(
@@ -32,12 +32,15 @@ public class LocationDatasourceInitializer {
         this.primaryJdbcClient = primaryJdbcClient;
         this.applicationContext = applicationContext;
         this.initializationState = initializationState;
+        System.out.println("Location database in location db initializer : " + initializationState.getLocationDatabaseName());
+        this.locationDatabaseName = initializationState.getLocationDatabaseName();
     }
 
-    @PostConstruct
-    private void createDatabaseIfNotExists() {
+    
+    public void createDatabaseIfNotExists() {
         try{
-            if(locationDatabaseName == null) {
+            System.out.println(this.locationDatabaseName);
+            if(this.locationDatabaseName == null) {
                 System.out.println("Location database name is null.");
             }
             else{
@@ -87,5 +90,7 @@ public class LocationDatasourceInitializer {
         planetInitializer.initializeTable();
         nationInitializer.initializeTable(); // Since Nation depends on Planet, it must come after.
         stateInitializer.initializeTable();
+
+        initializationState.setInitializedLocationTables(true);
     }
 }

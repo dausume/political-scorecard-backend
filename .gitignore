@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Jacoco ###
+!**/jacoco-report/
+/jacoco-report/

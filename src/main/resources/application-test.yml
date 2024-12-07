@@ -1,26 +1,41 @@
 # political-scorecard-backend/src/main/resources/application-test.yml
-
+# IMPORTANT: This file should be an exact copy of the application-test.yml file in the src/test/resources directory.
 spring:
   config:
     activate:
       on-profile: test
 app: # Test-specific app configuration goes here (e.g., in-memory DB or test-specific services)
   datasource:
-    primary:
-      db_name: mysql  # mysql is the name of the base database for Database Administration on mariadb containers.
+    # MariaDB databases
+    mariadb-primary:
+      database-name: mysql  # mysql is the name of the base database for Database Administration on mariadb containers.
       url: jdbc:mariadb://psc-mariadb-test:3306/mysql
-      username: psc-scorecard-server
+      username: psc-server-test
       password: test
       driver-class-name: org.mariadb.jdbc.Driver
-    context:
-      db_name: psc_context_db_test
-      url: jdbc:mariadb://psc-mariadb-test:3306/psc_context_db_test
-      username: psc-scorecard-server
+    scoring:
+      database-name: psc_scoring_db_test
+      url: jdbc:mariadb://psc-mariadb-test:3306/psc_scoring_db_test
+      username: psc-server-test
       password: test
       driver-class-name: org.mariadb.jdbc.Driver
     location:
-      db_name: psc_location_db_test
-      url: jdbc:mariadb://psc-mariadb:3306/psc_location_db_test
-      username: psc-scorecard-server
+      database-name: psc_location_db_test
+      url: jdbc:mariadb://psc-mariadb-test:3306/psc_location_db_test
+      username: psc-server-test
       password: test
       driver-class-name: org.mariadb.jdbc.Driver
+    # Redis databases
+    redis-primary:
+      host: psc-redis-test
+      port: 6800
+      username: psc-server-test
+      password: pscpassword
+      database-index: 0
+    geolocation:
+      host: psc-redis-test
+      port: 6800
+      username: psc-server-test
+      password: pscpassword
+      namespace: geolocation-test
+      database-index: 1

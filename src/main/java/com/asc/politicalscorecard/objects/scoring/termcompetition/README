@@ -1,0 +1,14 @@
+### Term Competition
+
+Terms are specific metrics refined in respect to a specific scientific context.
+
+For any given Score there should be a specific scientific context.
+
+This scientific context may allow for many Terms to be considered as valid for use by the
+given score.
+
+This can be referred to as the 'valid terms scope' or 'term scope'.
+
+However, within a given term scope, there may be multiple terms that fulfill the same purpose.
+These may be referred to as 'purpose-equivalent terms'.  However purpose-equivalent terms may
+not all be equally appropriate for the given context.

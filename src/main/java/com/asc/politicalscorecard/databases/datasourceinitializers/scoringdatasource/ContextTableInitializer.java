@@ -7,13 +7,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class ContextTableInitializer {
 
-    private final JdbcClient contextjdbcClient;
+    private final JdbcClient scoringJdbcClient;
 
     // Injects the primary JDBC client so that we can create the context database via the default mysql database.
-    public ContextTableInitializer(@Qualifier("contextJdbcClient") JdbcClient contextjdbcClient
+    public ContextTableInitializer(@Qualifier("scoringJdbcClient") JdbcClient scoringJdbcClient
     
     ) {
-        this.contextjdbcClient = contextjdbcClient;
+        this.scoringJdbcClient = scoringJdbcClient;
         initialize();
     }
 
@@ -24,19 +24,19 @@ public class ContextTableInitializer {
             insertInitialData();
             return true;
         } catch (Exception e) {
-            System.out.println("Error in ContextDatasourceInitializer: " + e.getMessage());
+            System.out.println("Error in ScoringDatasourceInitializer: " + e.getMessage());
             return false;
         }
     }
 
     private void createTable() {
-        contextjdbcClient.sql("CREATE TABLE IF NOT EXISTS context ("
+        scoringJdbcClient.sql("CREATE TABLE IF NOT EXISTS context ("
                 + "id INT PRIMARY KEY AUTO_INCREMENT, "
                 + "name VARCHAR(100)) ").update();
     }
 
     private void insertInitialData() {
-        contextjdbcClient.sql("INSERT INTO context (name) VALUES ('Context 1')");
-        contextjdbcClient.sql("INSERT INTO context (name) VALUES ('Context 2')");
+        scoringJdbcClient.sql("INSERT INTO context (name) VALUES ('Context 1')");
+        scoringJdbcClient.sql("INSERT INTO context (name) VALUES ('Context 2')");
     }
 }

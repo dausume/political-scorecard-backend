@@ -2,10 +2,8 @@ package com.asc.politicalscorecard.json.dtos.nationdto;
 
 import com.asc.politicalscorecard.json.deserializer.nationdeserializers.NationDeserializer;
 import com.asc.politicalscorecard.json.dtos.AbstractDTO;
-import com.asc.politicalscorecard.json.dtos.planetdto.PlanetDTO;
 import com.asc.politicalscorecard.json.serializer.nationserializers.NationSerializer;
 import com.asc.politicalscorecard.objects.location.Nation;
-import com.asc.politicalscorecard.objects.location.Planet;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -14,6 +12,18 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class NationDTO extends AbstractDTO {
     private String nationName;
     private String homePlanetId;
+
+    public static NationDTO fromEntity(Nation nation) {
+        return new NationDTO(nation.getId(), nation.getNationName(), nation.getHomePlanetId());
+    }
+
+    public static NationDTO fromExisting(String id, String nationName, String homePlanetId) {
+        return new NationDTO(id, nationName, homePlanetId);
+    }
+
+    public static NationDTO fromNew(String nationName, String homePlanetId) {
+        return new NationDTO(nationName, homePlanetId);
+    }
 
     public NationDTO() {
         // No-argument constructor
@@ -49,6 +59,14 @@ public class NationDTO extends AbstractDTO {
         this.nationName = nationName;
     }
 
+    public String getHomePlanetId() {
+        return homePlanetId;
+    }
+
+    public void setHomePlanetId(String homePlanetId) {
+        this.homePlanetId = homePlanetId;
+    }
+
     @Override
     public Nation toEntity() {
         if (this.getId() == null || this.getId().isEmpty()) {
@@ -58,14 +76,6 @@ public class NationDTO extends AbstractDTO {
             // Case when the DTO represents an existing Nation
             return new Nation(getId(), getNationName(), getHomePlanetId());
         }
-    }
-
-    public String getHomePlanetId() {
-        return homePlanetId;
-    }
-
-    public void setHomePlanetId(String homePlanetId) {
-        this.homePlanetId = homePlanetId;
     }
 
     @Override

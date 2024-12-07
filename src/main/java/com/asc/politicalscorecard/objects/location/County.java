@@ -1,6 +1,6 @@
 package com.asc.politicalscorecard.objects.location;
 
-public class County extends AbstractLocation {
+public class County {
     private String id;
 
     private String countyName;

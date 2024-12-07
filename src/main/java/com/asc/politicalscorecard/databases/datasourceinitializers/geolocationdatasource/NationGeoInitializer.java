@@ -2,6 +2,7 @@ package com.asc.politicalscorecard.databases.datasourceinitializers.geolocationd
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.client.RestTemplate;
+//import org.springframework.http.ResponseEntity;
 
 public class NationGeoInitializer {
 
@@ -31,23 +32,42 @@ public class NationGeoInitializer {
         for (String[] nation : nations) {
             String hashKey = nation[0];
             String url = nation[1];
+            //System.out.println("Checking existence for key: " + nationKey + ", hashKey: " + hashKey);
+            boolean exists = redisTemplate.opsForHash().hasKey(nationKey, hashKey);
+            //System.out.println("Key exists: " + exists);
             // Check if the data for this nation already exists in Redis
-            if (!redisTemplate.opsForHash().hasKey(nationKey, hashKey)) {
+            if (!exists) {
                 try {
                     // Fetch the GeoJSON data from the URL
                     String geoJsonData = restTemplate.getForObject(url, String.class);
-                    System.out.println("Caching the GeoJSON : " + geoJsonData);
+                    //System.out.println("Caching the GeoJSON : " + geoJsonData);
                     if (geoJsonData != null) {
                         // Store the GeoJSON data in Redis only if it's not already present
                         redisTemplate.opsForHash().put(nationKey, hashKey, geoJsonData);
-                        System.out.println("Cached GeoJSON for " + hashKey);
+                        //System.out.println("Cached GeoJSON for " + hashKey);
                     } else {
                         System.err.println("No data found for " + hashKey);
                     }
+                    /*
+                    ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+                    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                        geoJsonData = response.getBody();
+                        System.out.println("GeoJSON fetched: " + geoJsonData);
+                        redisTemplate.opsForHash().put(nationKey, hashKey, geoJsonData);
+                        System.out.println("Cached GeoJSON for " + hashKey);
+                    } else {
+                        System.err.println("Failed to fetch GeoJSON for " + hashKey + ": HTTP " + response.getStatusCode());
+                    }
+                        */
                 } catch (Exception e) {
                     System.err.println("Failed to fetch data for " + hashKey + ": " + e.getMessage());
                 }
             } else {
+                // Skip fetching data if it already exists
+                // For some reason when we hit this the service is not able to fetch the data
+                // Retrieve and log the data to validate
+                //Object storedData = redisTemplate.opsForHash().get(nationKey, hashKey);
+                //System.out.println("Retrieved data for " + hashKey + ": " + storedData);
                 System.out.println("GeoJSON data for " + hashKey + " already exists. Skipping fetch.");
             }
         }

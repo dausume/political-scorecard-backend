@@ -1,0 +1,49 @@
+### Legislative accountability competition
+
+This section is used for objects and file references meant for refining or doing accountability
+work on traditional legislative documents, or for performing attribution tying fragments of documentation
+to structured contexts and scoring.
+
+An 'assertion' in this system refers to a highlighted sub-section of text within a piece of legislation, which
+something is associated with.  
+
+Assertions, once made, can be voted on for validity over multiple rounds if necessary.
+
+By using assertions we can convert more abstract legislative text into a format that can be associated with
+more concrete data and analysis.
+
+This section also acts as a means to allocate scores to historic actions to establish a baseline of studying
+historically how certain policies and implementation approaches have performed.
+
+Legislation is associated per legislative body and each legislative body is associated with both elected individuals and specific location objects.
+
+Assertions on legislation may be made by individuals or by groups/organizations.
+
+There are a few kinds of assertions that may be made.
+
+(1) Positive Score Impact Assertions.
+An assertion may be made in regards to either a segment of the document, or to a segment
+
+(2) Negative Score Impact Assertions.
+
+
+(3) Specific Policy Implementation Assertions.
+
+
+(4) Abstract Policy Implementation Assertions.
+
+
+(5) Implementing Group Assertions.
+
+
+(6) Implementing Individual Assertions.
+    - Asserts that 
+
+(7) Dependency Legislation Assertions.
+
+    - Asserts that another piece of legislation is being referenced within this legislation, meaning the scoring of that legislation
+        should be carried into and applied towards this legislation.
+
+
+(8) Decorative Text Assertions.
+    - Used to indicate that this portion of the text is not actually useful or relevant and can be ignored without impact.

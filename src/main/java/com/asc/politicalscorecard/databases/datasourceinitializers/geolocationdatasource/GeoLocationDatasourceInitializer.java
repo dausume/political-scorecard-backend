@@ -17,7 +17,7 @@ public class GeoLocationDatasourceInitializer {
     private final ApplicationContext applicationContext;
     private final RedisTemplate<String, String> primaryRedisTemplate;
     private final InitializationState initializationState;
-    private final String geoLocationNamespace = "geoLocations";
+    private String geoLocationNamespace = "";
 
     public GeoLocationDatasourceInitializer(
         @Qualifier("redisTemplate") RedisTemplate<String, String> primaryRedisTemplate,
@@ -27,13 +27,16 @@ public class GeoLocationDatasourceInitializer {
         this.primaryRedisTemplate = primaryRedisTemplate;
         this.applicationContext = applicationContext;
         this.initializationState = initializationState;
+        this.geoLocationNamespace = this.initializationState.getGeoLocationDatabaseName();
     }
 
-    @PostConstruct
-    private void createNamespaceIfNotExists() {
+    
+    public void createNamespaceIfNotExists() {
+        System.out.println("In createNamespaceIfNotExists for GeoLocationDatasourceInitializer.");
         try {
             // Check if the namespace exists in Redis
             Boolean exists = primaryRedisTemplate.hasKey(geoLocationNamespace);
+            System.out.println("Checking if namespace exists for GeoLocation database: " + geoLocationNamespace + " - " + exists);
             if (Boolean.FALSE.equals(exists)) {
                 System.out.println("Creating namespace for GeoLocation database: " + geoLocationNamespace);
                 // This should create the geoLocations namespace in Redis in db0
@@ -43,6 +46,7 @@ public class GeoLocationDatasourceInitializer {
                 initializationState.setInitializedGeoLocationDatabase(true);
             } else {
                 System.out.println("GeoLocation namespace already exists.");
+                initializationState.setInitializedGeoLocationDatabase(true);
             }
         } catch (Exception e) {
             System.out.println("Error creating GeoLocation namespace: " + e.getMessage());
@@ -58,5 +62,7 @@ public class GeoLocationDatasourceInitializer {
         // Initialize the "tables" (Redis data structures)
         nationGeoInitializer.initializeTable();
         stateGeoInitializer.initializeTable();
+
+        initializationState.setInitializedGeoLocationTables(true);
     }
 }

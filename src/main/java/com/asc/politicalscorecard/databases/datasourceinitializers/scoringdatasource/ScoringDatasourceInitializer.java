@@ -25,13 +25,13 @@ import jakarta.annotation.PostConstruct;
 
 @Component
 @Scope("singleton")
-public class ScoringDatasourceInitializer implements EnvironmentAware {
+public class ScoringDatasourceInitializer {
 
     private final JdbcClient primaryJdbcClient;
     private final ApplicationContext applicationContext;
     private InitializationState initializationState;
 
-    private String contextDatabaseName = "psc_context_db";
+    private String scoringDatasourceName = "";
 
     // Injects the primary JDBC client so that we can create the context database via the default mysql database.
     public ScoringDatasourceInitializer(
@@ -43,52 +43,31 @@ public class ScoringDatasourceInitializer implements EnvironmentAware {
         this.primaryJdbcClient = primaryJdbcClient;
         this.applicationContext = applicationContext;
         this.initializationState = initializationState;
+        this.scoringDatasourceName = initializationState.getScoringDatabaseName();
+        System.out.println("Scoring Database Name: " + scoringDatasourceName);
     }
 
-    @Override
-    public void setEnvironment(Environment environment) {
-        // Retrieve the property value from the Environment
-        this.contextDatabaseName = environment.getProperty("app.datasource.context.db_name");
-    }
-
-    @PostConstruct
-    public boolean initialize() {
+    
+    public void createDatabaseIfNotExists() {
+        System.out.println("In createDatabaseIfNotExists for ScoringDatasourceInitializer.");
         try{
-            createDatabaseIfNotExists();
-            return true;
-        } catch (Exception e) {
-            System.out.println("Error in LocationDatasourceInitializer: " + e.getMessage());
-            return false;
-        }
-    }
-
-    private void createDatabaseIfNotExists() {
-        try{
-            if(contextDatabaseName == null) {
-                System.out.println("Context database name is null.");
+            if(scoringDatasourceName == null) {
+                System.out.println("Scoring database name is null.");
             }
             else{
-                String createDatabaseSql = "CREATE DATABASE IF NOT EXISTS " + contextDatabaseName + ";";
-                System.out.println("Creating context database: " + createDatabaseSql);
+                String createDatabaseSql = "CREATE DATABASE IF NOT EXISTS " + scoringDatasourceName + ";";
+                System.out.println("Creating scoring database: " + createDatabaseSql);
                 System.out.println("Primary JDBC Client: " + primaryJdbcClient);
                 // Attempt to create the database
                 primaryJdbcClient.sql(createDatabaseSql).update();
-                if(confirmDatabaseExists(contextDatabaseName))
-                {
-                    System.out.println("Context database created successfully.");
-                    initializeTables(); // Initialize the tables in the context database after we confirm it exists.
-                }
-                else
-                {
-                    System.out.println("Context database creation failed.");
-                }
+                confirmDatabaseExists(scoringDatasourceName);
             }
         } catch (Exception e) {
             System.out.println("Error in createDatabaseIfNotExists: " + e.getMessage());
         }
     }
 
-    private boolean confirmDatabaseExists(String databaseName) {
+    private void confirmDatabaseExists(String databaseName) {
         try {
             // Use Show Tables to check if the database was created
                 // Execute the "SHOW TABLES" command and store the result
@@ -105,29 +84,21 @@ public class ScoringDatasourceInitializer implements EnvironmentAware {
                         }
                     });
                 }
-                return this.initializationState.isInitializedScoringDatabase();
         } catch (Exception e) {
             System.out.println("Error in confirmDatabaseExists: " + e.getMessage());
-            return false;
         }
     }
 
 
-    private void initializeTables() {
+    public void initialize() {
         // Retrieve the JdbcClient for location data source after database creation
-        JdbcClient locationJdbcClient = applicationContext.getBean("locationJdbcClient", JdbcClient.class);
+        JdbcClient scoringJdbcClient = applicationContext.getBean("scoringJdbcClient", JdbcClient.class);
         
         System.out.println("In initialize tables for LocationDatasourceInitializer.");
 
-        /* 
-        PlanetInitializer planetInitializer = new PlanetInitializer(locationJdbcClient);
-        NationInitializer nationInitializer = new NationInitializer(locationJdbcClient);
-        StateInitializer stateInitializer = new StateInitializer(locationJdbcClient);
+        //ContextTableInitializer contextTableInitializer = new ContextTableInitializer(scoringJdbcClient);
 
-        planetInitializer.initializeTable();
-        nationInitializer.initializeTable(); // Since Nation depends on Planet, it must come after.
-        stateInitializer.initializeTable();
-        */
+        initializationState.setInitializedScoringTables(true);
     }
 
 }

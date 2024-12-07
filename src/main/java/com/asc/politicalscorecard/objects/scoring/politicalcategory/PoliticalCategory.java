@@ -1,5 +1,8 @@
 package com.asc.politicalscorecard.objects.scoring.politicalcategory;
 
+// The class that represents a political category.
+// This is simply meant to be a means to categorize topics and issues according to conventional political categories.
+// Such that the user can filter and search for topics and issues, scores or legislation, based on these categories.
 public class PoliticalCategory {
     // The id of the category.
     private String id;
