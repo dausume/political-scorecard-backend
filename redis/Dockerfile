@@ -1,5 +1,5 @@
 # Use the official Bitnami Redis 7.4 image as the base
-FROM docker.io/bitnami/redis:7.4
+FROM docker.io/bitnami/redis:latest
 
 # Define default environment variables
 ENV REDIS_PASSWORD="password" \

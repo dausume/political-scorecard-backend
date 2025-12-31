@@ -3,4 +3,4 @@ spring:
   application:
     name: political-scorecard-backend
   profiles: # Note: Can activate multiple profiles by separating them with a comma, ex: "local,test".
-    active: ${SPRING_PROFILES_ACTIVE:dev} # Activates the configuration profiles based on the SPRING_PROFILES_ACTIVE environment variable
+    active: dev # Default profile set directly in config (previously from SPRING_PROFILES_ACTIVE env var)

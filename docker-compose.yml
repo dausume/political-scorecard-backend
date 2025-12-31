@@ -32,7 +32,7 @@ services:
       dockerfile: Dockerfile
     container_name: psc-backend
     ports:
-      - "8080:8080"
+      - "8580:8080"
     networks:
       - psc-network
     environment:
@@ -50,4 +50,4 @@ volumes:
 
 networks:
   psc-network:
-    driver: bridge
+    #external: true
