@@ -6,6 +6,28 @@ spring:
   config:
     activate:
       on-profile: dev
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Replace with your Keycloak realm JWKS endpoint
+          # Format: http://{keycloak-host}:{port}/realms/{realm-name}/protocol/openid-connect/certs
+          # Using HTTP for internal Docker network communication (containers are already on private network)
+          # to fetch JWK keys - this avoids SSL certificate issues between containers
+          jwk-set-uri: ${KEYCLOAK_JWKS_URI:http://pol-keycloak:8080/realms/Political-Scorecard/protocol/openid-connect/certs}
+          # Issuer URI must match the 'iss' claim in tokens (what Keycloak puts in the token)
+          # Tokens are issued via the public URL (https://localhost:8443), so this must match
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://localhost:8443/realms/Political-Scorecard}
+
+# Enable debug logging for OAuth2 and JWT validation
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.oauth2.jwt: DEBUG
+    org.springframework.security.oauth2.server.resource: DEBUG
+    com.nimbusds: DEBUG
+
 app: # Default Application-specific build configuration goes here
   datasource:
     # MariaDB databases
