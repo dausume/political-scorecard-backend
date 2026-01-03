@@ -39,3 +39,10 @@ app: # Test-specific app configuration goes here (e.g., in-memory DB or test-spe
       password: pscpassword
       namespace: geolocation-test
       database-index: 1
+    scoringcache:
+      host: psc-redis-test
+      port: 6800
+      username: psc-server-test
+      password: pscpassword
+      namespace: scoringcache-test
+      database-index: 2

@@ -24,6 +24,7 @@ import com.asc.politicalscorecard.databases.datasourceproperties.MariaDatasource
 import com.asc.politicalscorecard.databases.datasourceproperties.RedisDatasourceProperties;
 import com.asc.politicalscorecard.databases.datasourceinitializers.geolocationdatasource.GeoLocationDatasourceInitializer;
 import com.asc.politicalscorecard.databases.datasourceinitializers.locationsdatasource.LocationDatasourceInitializer;
+import com.asc.politicalscorecard.databases.datasourceinitializers.scoringcachedatasource.ScoringCacheDatasourceInitializer;
 
 import org.springframework.context.ApplicationContext;
 
@@ -224,7 +225,49 @@ public class DataSourceConfiguration {
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         return redisTemplate;
     }
-    
+
+    // ScoringCache Database ====================================================================================================
+
+    @Bean
+    @Scope("singleton")
+    @ConfigurationProperties("app.datasource.scoringcache")
+    @DependsOn("redisTemplate") // The scoringCache datasource depends on the primary redis database existing.
+    public RedisDatasourceProperties scoringCacheDataSourceProperties() {
+        return new RedisDatasourceProperties();
+    }
+
+
+    @Bean
+    @Scope("singleton")
+    @DependsOn("scoringCacheDataSourceProperties")
+    public LettuceConnectionFactory scoringCacheDataSource(@Qualifier("scoringCacheDataSourceProperties") RedisDatasourceProperties redisProperties) {
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+        redisStandaloneConfiguration.setHostName(redisProperties.getHost());
+        redisStandaloneConfiguration.setPort(redisProperties.getPort());
+        redisStandaloneConfiguration.setDatabase((redisProperties.getDatabaseIndex()) );// convert to integer
+        // Set the username if provided
+        if (redisProperties.getUsername() != null && !redisProperties.getUsername().isEmpty()) {
+            redisStandaloneConfiguration.setUsername(redisProperties.getUsername());
+        }
+        redisStandaloneConfiguration.setPassword(redisProperties.getPassword());
+        return new LettuceConnectionFactory(redisStandaloneConfiguration);
+    }
+
+
+    @Bean
+    @Scope("singleton")
+    @DependsOn({"scoringCacheDataSource", "databaseInitializer"})
+    public RedisTemplate<String, String> scoringCacheRedisClient(@Qualifier("scoringCacheDataSource") RedisConnectionFactory redisConnectionFactory) {
+        System.out.println("In scoringCacheDataSource creation");
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<String, String>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return redisTemplate;
+    }
+
 
     // DATABASE INITIALIZATION ============================================================================================
 
@@ -240,22 +283,27 @@ public class DataSourceConfiguration {
 
         private GeoLocationDatasourceInitializer geoLocationDatasourceInitializer = null;
 
+        private ScoringCacheDatasourceInitializer scoringCacheDatasourceInitializer = null;
+
         @Bean
         @Scope("singleton")
-        @DependsOn({"scoringDataSourceProperties", "locationDataSourceProperties", "geoLocationDataSourceProperties"})
+        @DependsOn({"scoringDataSourceProperties", "locationDataSourceProperties", "geoLocationDataSourceProperties", "scoringCacheDataSourceProperties"})
         public DatabaseInitializer databaseInitializationSettings(
             @Qualifier("scoringDataSourceProperties") MariaDatasourceProperties scoringDataSourceProperties,
             @Qualifier("locationDataSourceProperties") MariaDatasourceProperties locationDataSourceProperties,
-            @Qualifier("geoLocationDataSourceProperties") RedisDatasourceProperties geoLocationDataSourceProperties
-            ) 
+            @Qualifier("geoLocationDataSourceProperties") RedisDatasourceProperties geoLocationDataSourceProperties,
+            @Qualifier("scoringCacheDataSourceProperties") RedisDatasourceProperties scoringCacheDataSourceProperties
+            )
         {
             System.out.println("Setting database initialization settings...");
             System.out.println("GeoLocation database props and name: " + geoLocationDataSourceProperties + " : " + geoLocationDataSourceProperties.getNamespace());
+            System.out.println("ScoringCache database props and name: " + scoringCacheDataSourceProperties + " : " + scoringCacheDataSourceProperties.getNamespace());
             System.out.println("Location database props and name: " + locationDataSourceProperties + " : " + locationDataSourceProperties.getDatabaseName());
             // Set the database names
             initializationState.setScoringDatabaseName(scoringDataSourceProperties.getDatabaseName());
             initializationState.setLocationDatabaseName(locationDataSourceProperties.getDatabaseName());
             initializationState.setGeoLocationDatabaseName(geoLocationDataSourceProperties.getNamespace());
+            initializationState.setScoringCacheDatabaseName(scoringCacheDataSourceProperties.getNamespace());
             return this;
         }
 
@@ -294,9 +342,16 @@ public class DataSourceConfiguration {
                     initializationState
                 );
 
+                scoringCacheDatasourceInitializer = new ScoringCacheDatasourceInitializer(
+                    primaryRedisTemplate,
+                    applicationContext,
+                    initializationState
+                );
+
                 scoringDatasourceInitializer.createDatabaseIfNotExists();
                 locationDatasourceInitializer.createDatabaseIfNotExists();
                 geoLocationDatasourceInitializer.createNamespaceIfNotExists();
+                scoringCacheDatasourceInitializer.createNamespaceIfNotExists();
                 System.out.println("All initializers started, awaiting database initialization completion.");
                 // Wait for all databases to be ready
                 initializationState.waitForDatabaseInitializations();
@@ -311,23 +366,25 @@ public class DataSourceConfiguration {
 
         @Bean
         @Scope("singleton")
-        @DependsOn({"databaseInitializer", "locationJdbcClient", "scoringJdbcClient", "geoLocationRedisClient"})
+        @DependsOn({"databaseInitializer", "locationJdbcClient", "scoringJdbcClient", "geoLocationRedisClient", "scoringCacheRedisClient"})
         public DatabaseInitializer databaseTablesInitializer(
             @Qualifier("databaseInitializer") DatabaseInitializer dbInit
-            ) 
+            )
         {
             System.out.println("Starting table initialization...");
             try {
                 // Wait for all tables to be ready
                 if (
-                    initializationState.isInitializedScoringDatabase() && 
+                    initializationState.isInitializedScoringDatabase() &&
                     initializationState.isInitializedLocationDatabase() &&
-                    initializationState.isInitializedGeoLocationDatabase()
-                    ) 
-                    {
+                    initializationState.isInitializedGeoLocationDatabase() &&
+                    initializationState.isInitializedScoringCacheDatabase()
+                )
+                {
                     scoringDatasourceInitializer.initialize();
                     locationDatasourceInitializer.initialize();
                     geoLocationDatasourceInitializer.initialize();
+                    scoringCacheDatasourceInitializer.initialize();
                     System.out.println("All initializers completed successfully. Application can start.");
                 }
                 else

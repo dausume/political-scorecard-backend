@@ -24,10 +24,14 @@ public class InitializationState {
     private boolean initializedGeoLocationTables = false;
     private String geoLocationDatabaseName = "";
 
+    private boolean initializedScoringCacheDatabase = false;
+    private boolean initializedScoringCacheTables = false;
+    private String scoringCacheDatabaseName = "";
+
     // -- Database Initialization Getters
 
     public synchronized boolean isInitializedDatabases() {
-        return initializedScoringDatabase && initializedLocationDatabase && initializedGeoLocationDatabase;
+        return initializedScoringDatabase && initializedLocationDatabase && initializedGeoLocationDatabase && initializedScoringCacheDatabase;
     }
 
     public synchronized boolean isInitializedLocationDatabase() {
@@ -42,10 +46,14 @@ public class InitializationState {
         return initializedGeoLocationDatabase;
     }
 
+    public synchronized boolean isInitializedScoringCacheDatabase() {
+        return initializedScoringCacheDatabase;
+    }
+
     // -- table initialization getters
 
     public synchronized boolean isInitializedTables() {
-        return initializedLocationTables && initializedScoringTables && initializedGeoLocationTables;
+        return initializedLocationTables && initializedScoringTables && initializedGeoLocationTables && initializedScoringCacheTables;
     }
 
     public synchronized boolean isInitializedLocationTables() {
@@ -58,6 +66,10 @@ public class InitializationState {
 
     public synchronized boolean isInitializedGeoLocationTables() {
         return initializedGeoLocationTables;
+    }
+
+    public synchronized boolean isInitializedScoringCacheTables() {
+        return initializedScoringCacheTables;
     }
 
     // -- Database Initialization Setters
@@ -80,6 +92,12 @@ public class InitializationState {
         checkAndNotifyDatabaseInitialization();
     }
 
+    public synchronized void setInitializedScoringCacheDatabase(boolean initializedScoringCacheDatabase) {
+        System.out.println("Setting initializedScoringCacheDatabase");
+        this.initializedScoringCacheDatabase = initializedScoringCacheDatabase;
+        checkAndNotifyDatabaseInitialization();
+    }
+
     // -- Table Initialization Setters
 
     public synchronized void setInitializedLocationTables(boolean initializedLocationTables) {
@@ -97,6 +115,11 @@ public class InitializationState {
         checkAndNotifyTableInitialization();
     }
 
+    public synchronized void setInitializedScoringCacheTables(boolean initializedScoringCacheTables) {
+        this.initializedScoringCacheTables = initializedScoringCacheTables;
+        checkAndNotifyTableInitialization();
+    }
+
     // -- Database Name Getters
 
     public synchronized String getLocationDatabaseName() {
@@ -111,6 +134,10 @@ public class InitializationState {
         return geoLocationDatabaseName;
     }
 
+    public synchronized String getScoringCacheDatabaseName() {
+        return scoringCacheDatabaseName;
+    }
+
     // -- Database Name Setters
 
     public void setLocationDatabaseName(String locationDatabaseName) {
@@ -123,6 +150,10 @@ public class InitializationState {
 
     public void setGeoLocationDatabaseName(String geoLocationDatabaseName) {
         this.geoLocationDatabaseName = geoLocationDatabaseName;
+    }
+
+    public void setScoringCacheDatabaseName(String scoringCacheDatabaseName) {
+        this.scoringCacheDatabaseName = scoringCacheDatabaseName;
     }
 
     // -- Synchronization Methods --
@@ -146,6 +177,7 @@ public class InitializationState {
         System.out.println("Location Database: " + initializedLocationDatabase);
         System.out.println("Scoring Database: " + initializedScoringDatabase);
         System.out.println("GeoLocation Database: " + initializedGeoLocationDatabase);
+        System.out.println("ScoringCache Database: " + initializedScoringCacheDatabase);
         if (isInitializedDatabases()) {
             notifyAllDatabasesReady();
         }
@@ -156,6 +188,7 @@ public class InitializationState {
         System.out.println("Location Tables: " + initializedLocationTables);
         System.out.println("GeoLocation Tables: " + initializedGeoLocationTables);
         System.out.println("Scoring Tables: " + initializedScoringTables);
+        System.out.println("ScoringCache Tables: " + initializedScoringCacheTables);
         if (isInitializedTables()) {
             notifyAllTablesReady();
         }

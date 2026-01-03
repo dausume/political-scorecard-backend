@@ -91,12 +91,41 @@ public class ScoringDatasourceInitializer {
 
 
     public void initialize() {
-        // Retrieve the JdbcClient for location data source after database creation
+        // Retrieve the JdbcClient for scoring data source after database creation
         JdbcClient scoringJdbcClient = applicationContext.getBean("scoringJdbcClient", JdbcClient.class);
-        
-        System.out.println("In initialize tables for LocationDatasourceInitializer.");
 
-        //ContextTableInitializer contextTableInitializer = new ContextTableInitializer(scoringJdbcClient);
+        System.out.println("In initialize tables for ScoringDatasourceInitializer.");
+
+        // Initialize all scoring tables in dependency order
+        TermTableInitializer termTableInitializer = new TermTableInitializer(scoringJdbcClient);
+        termTableInitializer.initializeTable();
+
+        ValueMetadataTableInitializer valueMetadataTableInitializer = new ValueMetadataTableInitializer(scoringJdbcClient);
+        valueMetadataTableInitializer.initializeTable();
+
+        TermContextTableInitializer termContextTableInitializer = new TermContextTableInitializer(scoringJdbcClient);
+        termContextTableInitializer.initializeTable();
+
+        ContextHierarchyTableInitializer contextHierarchyTableInitializer = new ContextHierarchyTableInitializer(scoringJdbcClient);
+        contextHierarchyTableInitializer.initializeTable();
+
+        ContextualizedTermTableInitializer contextualizedTermTableInitializer = new ContextualizedTermTableInitializer(scoringJdbcClient);
+        contextualizedTermTableInitializer.initializeTable();
+
+        WeightedWorldviewTermTableInitializer weightedWorldviewTermTableInitializer = new WeightedWorldviewTermTableInitializer(scoringJdbcClient);
+        weightedWorldviewTermTableInitializer.initializeTable();
+
+        ContextualizedTermScoreTableInitializer contextualizedTermScoreTableInitializer = new ContextualizedTermScoreTableInitializer(scoringJdbcClient);
+        contextualizedTermScoreTableInitializer.initializeTable();
+
+        CriticalContextTableInitializer criticalContextTableInitializer = new CriticalContextTableInitializer(scoringJdbcClient);
+        criticalContextTableInitializer.initializeTable();
+
+        WorldviewElectionTableInitializer worldviewElectionTableInitializer = new WorldviewElectionTableInitializer(scoringJdbcClient);
+        worldviewElectionTableInitializer.initializeTable();
+
+        WorldviewBallotTableInitializer worldviewBallotTableInitializer = new WorldviewBallotTableInitializer(scoringJdbcClient);
+        worldviewBallotTableInitializer.initializeTable();
 
         initializationState.setInitializedScoringTables(true);
     }

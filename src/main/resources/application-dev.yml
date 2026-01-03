@@ -64,3 +64,10 @@ app: # Default Application-specific build configuration goes here
       password: pscpassword
       namespace: geolocation
       database-index: 1
+    scoringcache:
+      host: psc-redis
+      port: 6379
+      username: psc-server
+      password: pscpassword
+      namespace: scoringcache
+      database-index: 2
