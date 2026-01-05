@@ -58,7 +58,7 @@ public class NationGeoInitializer {
                     } else {
                         System.err.println("Failed to fetch GeoJSON for " + hashKey + ": HTTP " + response.getStatusCode());
                     }
-                        */
+                    */
                 } catch (Exception e) {
                     System.err.println("Failed to fetch data for " + hashKey + ": " + e.getMessage());
                 }

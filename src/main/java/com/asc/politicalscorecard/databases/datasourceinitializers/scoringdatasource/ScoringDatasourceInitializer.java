@@ -128,6 +128,11 @@ public class ScoringDatasourceInitializer {
         worldviewBallotTableInitializer.initializeTable();
 
         initializationState.setInitializedScoringTables(true);
+
+        // Initialize sample data - Labor Quality Per State 2022
+        System.out.println("Initializing sample data for Labor Quality 2022...");
+        LaborQualityDataInitializer laborQualityDataInitializer = new LaborQualityDataInitializer(scoringJdbcClient);
+        laborQualityDataInitializer.initializeData();
     }
 
 }
