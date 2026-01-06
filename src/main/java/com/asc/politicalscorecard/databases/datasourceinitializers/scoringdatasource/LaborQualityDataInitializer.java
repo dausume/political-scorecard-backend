@@ -40,25 +40,37 @@ public class LaborQualityDataInitializer {
     public void initializeData() {
         System.out.println("Initializing Labor Quality Per State 2022 data...");
 
-        // Check if data already exists by querying for a sample contextualized term entry
-        // This ensures the complete data pipeline was initialized, not just base terms
-        Integer count = scoringJdbcClient.sql(
+        // Check if contextualized term data already exists
+        Integer termCount = scoringJdbcClient.sql(
             "SELECT COUNT(*) FROM contextualized_term WHERE id = ?"
         ).param("ct-alabama-union-2022").query(Integer.class).single();
 
-        if (count > 0) {
-            System.out.println("Labor Quality data already exists. Skipping initialization.");
-            return;
+        if (termCount == 0) {
+            // Initialize base data: Terms -> ValueMetadata -> Contexts -> ContextualizedTerms
+            insertBaseTerms();
+            insertValueMetadata();
+            insertTimeframeContext();
+            insertLocationContexts();
+            insertContextualizedTerms();
+            System.out.println("Labor Quality base data initialized successfully.");
+        } else {
+            System.out.println("Labor Quality base data already exists. Skipping base data initialization.");
         }
 
-        // Initialize in order: Terms -> ValueMetadata -> Contexts -> ContextualizedTerms
-        insertBaseTerms();
-        insertValueMetadata();
-        insertTimeframeContext();
-        insertLocationContexts();
-        insertContextualizedTerms();
+        // Check if election data already exists (separately from base data)
+        Integer electionCount = scoringJdbcClient.sql(
+            "SELECT COUNT(*) FROM worldview_election WHERE id = ?"
+        ).param("election-labor-quality-2024").query(Integer.class).single();
 
-        System.out.println("Labor Quality data initialized successfully.");
+        if (electionCount == 0) {
+            // Initialize election-specific data: Election -> Ballot -> WeightedTerms
+            insertLaborQualityElection();
+            insertLaborQualityBallotTemplate();
+            insertWeightedTerms();
+            System.out.println("Labor Quality election data initialized successfully.");
+        } else {
+            System.out.println("Labor Quality election already exists. Skipping election initialization.");
+        }
     }
 
     private void insertBaseTerms() {
@@ -635,5 +647,105 @@ public class LaborQualityDataInitializer {
         scoringJdbcClient.sql(
             "INSERT IGNORE INTO contextualized_term_contexts (contextualized_term_id, context_id) VALUES (?, ?)"
         ).params(id, locationContextId).update();
+    }
+
+    private void insertLaborQualityElection() {
+        System.out.println("Inserting Labor Quality election...");
+
+        // Create the Labor Quality Score 2024 election
+        scoringJdbcClient.sql(
+            "INSERT IGNORE INTO worldview_election " +
+            "(id, name, description, election_types, status, created_by, total_ballots) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?)"
+        ).params(
+            "election-labor-quality-2024",
+            "Labor Quality Score 2024",
+            "Evaluates labor quality across US states using union participation, labor force participation, minimum wage, and poverty rates. Based on real-world data from all 50 states plus DC.",
+            "[\"Economic Policy\", \"Labor Rights\"]", // JSON array
+            "ACTIVE",
+            "system",
+            0
+        ).update();
+    }
+
+    private void insertLaborQualityBallotTemplate() {
+        System.out.println("Inserting Labor Quality ballot template...");
+
+        // Create a template ballot that defines the Labor Quality scoring methodology
+        scoringJdbcClient.sql(
+            "INSERT IGNORE INTO worldview_ballot " +
+            "(id, election_id, voter_id, name, ballot_type) " +
+            "VALUES (?, ?, ?, ?, ?)"
+        ).params(
+            "ballot-labor-quality-template",
+            "election-labor-quality-2024",
+            "system",
+            "Labor Quality Score Template",
+            "labor-quality"
+        ).update();
+    }
+
+    private void insertWeightedTerms() {
+        System.out.println("Inserting weighted worldview terms...");
+
+        // Labor Quality weights (total = 21)
+        // Union Participation: 5/21 ≈ 0.2381
+        // Labor Force Participation Rate: 2/21 ≈ 0.0952
+        // Minimum Wage: 8/21 ≈ 0.3810
+        // Impoverished Workforce: 6/21 ≈ 0.2857 (negative - lower is better)
+
+        String ballotId = "ballot-labor-quality-template";
+
+        // Union Participation (positive, weight 5/21)
+        scoringJdbcClient.sql(
+            "INSERT IGNORE INTO weighted_worldview_term " +
+            "(id, term_id, weight, worldview_ballot_id, is_positive) " +
+            "VALUES (?, ?, ?, ?, ?)"
+        ).params(
+            "wwt-labor-quality-union",
+            TERM_UNION_PARTICIPATION,
+            0.2381,
+            ballotId,
+            true
+        ).update();
+
+        // Labor Force Participation Rate (positive, weight 2/21)
+        scoringJdbcClient.sql(
+            "INSERT IGNORE INTO weighted_worldview_term " +
+            "(id, term_id, weight, worldview_ballot_id, is_positive) " +
+            "VALUES (?, ?, ?, ?, ?)"
+        ).params(
+            "wwt-labor-quality-lfpr",
+            TERM_LFPR,
+            0.0952,
+            ballotId,
+            true
+        ).update();
+
+        // Minimum Wage (positive, weight 8/21)
+        scoringJdbcClient.sql(
+            "INSERT IGNORE INTO weighted_worldview_term " +
+            "(id, term_id, weight, worldview_ballot_id, is_positive) " +
+            "VALUES (?, ?, ?, ?, ?)"
+        ).params(
+            "wwt-labor-quality-minwage",
+            TERM_MIN_WAGE,
+            0.3810,
+            ballotId,
+            true
+        ).update();
+
+        // Impoverished Workforce (negative - lower is better, weight 6/21)
+        scoringJdbcClient.sql(
+            "INSERT IGNORE INTO weighted_worldview_term " +
+            "(id, term_id, weight, worldview_ballot_id, is_positive) " +
+            "VALUES (?, ?, ?, ?, ?)"
+        ).params(
+            "wwt-labor-quality-impoverished",
+            TERM_IMPOVERISHED,
+            0.2857,
+            ballotId,
+            false
+        ).update();
     }
 }

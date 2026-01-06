@@ -23,7 +23,7 @@ public class WorldviewElectionTableInitializer {
             "id VARCHAR(255) PRIMARY KEY, " +
             "name VARCHAR(255) NOT NULL, " +
             "description TEXT, " +
-            "election_type VARCHAR(100), " +
+            "election_types JSON, " +
             "status VARCHAR(50) NOT NULL DEFAULT 'DRAFT', " + // DRAFT, ACTIVE, CLOSED, ARCHIVED
             "start_date DATETIME, " +
             "end_date DATETIME, " +
@@ -32,7 +32,6 @@ public class WorldviewElectionTableInitializer {
             "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
             "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, " +
             "INDEX idx_status (status), " +
-            "INDEX idx_election_type (election_type), " +
             "INDEX idx_created_by (created_by)" +
             ")"
         ).update();

@@ -18,8 +18,8 @@ public class WorldviewElection {
     // Description/purpose of the election
     private String description;
 
-    // Election type/category (e.g., "presidential", "policy-poll", "economic-assessment")
-    private String electionType;
+    // Election types/categories (e.g., ["Economic Policy", "Labor Rights"])
+    private List<String> electionTypes;
 
     // Status of the election (DRAFT, ACTIVE, CLOSED, ARCHIVED)
     private ElectionStatus status;
@@ -57,13 +57,13 @@ public class WorldviewElection {
         this.totalBallots = 0;
     }
 
-    public WorldviewElection(String id, String name, String description, String electionType,
+    public WorldviewElection(String id, String name, String description, List<String> electionTypes,
                             ElectionStatus status, LocalDateTime startDate, LocalDateTime endDate,
                             String createdBy) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.electionType = electionType;
+        this.electionTypes = electionTypes;
         this.status = status;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -119,12 +119,12 @@ public class WorldviewElection {
         this.description = description;
     }
 
-    public String getElectionType() {
-        return electionType;
+    public List<String> getElectionTypes() {
+        return electionTypes;
     }
 
-    public void setElectionType(String electionType) {
-        this.electionType = electionType;
+    public void setElectionTypes(List<String> electionTypes) {
+        this.electionTypes = electionTypes;
     }
 
     public ElectionStatus getStatus() {
@@ -196,7 +196,7 @@ public class WorldviewElection {
         return "WorldviewElection{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", type='" + electionType + '\'' +
+                ", types=" + electionTypes +
                 ", status=" + status +
                 ", totalBallots=" + totalBallots +
                 ", startDate=" + startDate +
