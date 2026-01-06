@@ -124,6 +124,9 @@ public class ScoringDatasourceInitializer {
         WorldviewElectionTableInitializer worldviewElectionTableInitializer = new WorldviewElectionTableInitializer(scoringJdbcClient);
         worldviewElectionTableInitializer.initializeTable();
 
+        DebateMessageTableInitializer debateMessageTableInitializer = new DebateMessageTableInitializer(scoringJdbcClient);
+        debateMessageTableInitializer.initializeTable();
+
         WorldviewBallotTableInitializer worldviewBallotTableInitializer = new WorldviewBallotTableInitializer(scoringJdbcClient);
         worldviewBallotTableInitializer.initializeTable();
 

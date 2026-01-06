@@ -148,6 +148,44 @@ public class ContextualizedTermDAO extends AbstractDAO<ContextualizedTermDTO> {
         }
     }
 
+    /**
+     * Get contextualized terms that match any of the provided context IDs.
+     * This is used to filter terms based on selected primary, comparative, or critical contexts.
+     *
+     * @param contextIds List of context IDs to match against
+     * @return ApiResponse containing matching contextualized terms
+     */
+    public ApiResponse<List<ContextualizedTermDTO>> readByContextIds(List<String> contextIds) {
+        if (contextIds == null || contextIds.isEmpty()) {
+            return new ApiResponse<>(true, "No context IDs provided, returning empty list", new ArrayList<>());
+        }
+
+        try {
+            // Build query with IN clause for context IDs
+            // We join with the junction table to find contextualized terms that have any of the specified contexts
+            String placeholders = String.join(",", contextIds.stream().map(id -> "?").toArray(String[]::new));
+            String query = "SELECT DISTINCT ct.* FROM contextualized_term ct " +
+                          "INNER JOIN contextualized_term_contexts ctc ON ct.id = ctc.contextualized_term_id " +
+                          "WHERE ctc.context_id IN (" + placeholders + ") " +
+                          "ORDER BY ct.created_at DESC";
+
+            List<ContextualizedTermBasicDTO> basicList = jdbcClient.sql(query)
+                    .params(contextIds)
+                    .query(ContextualizedTermBasicDTO.class)
+                    .list();
+
+            List<ContextualizedTermDTO> completeDTOs = new ArrayList<>();
+            for (ContextualizedTermBasicDTO basic : basicList) {
+                completeDTOs.add(buildCompleteDTO(basic));
+            }
+
+            return new ApiResponse<>(true, "Found " + completeDTOs.size() + " contextualized terms matching the provided contexts", completeDTOs);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error reading contextualized terms by context IDs: ", e);
+            return new ApiResponse<>(false, "Error reading contextualized terms by context IDs: " + e.getMessage(), null);
+        }
+    }
+
     @Override
     public ApiResponse<ContextualizedTermDTO> update(ContextualizedTermDTO dto) {
         try {

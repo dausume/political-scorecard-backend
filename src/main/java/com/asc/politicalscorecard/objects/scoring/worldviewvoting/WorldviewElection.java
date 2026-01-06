@@ -39,6 +39,11 @@ public class WorldviewElection {
     // Total number of ballots submitted
     private Integer totalBallots;
 
+    // Context specifications that define what context types and granularities
+    // voters must use when filling out ballots for this election
+    // Example: [LOCATION:STATE, TIMEFRAME:SINGLE_YEAR]
+    private List<ContextSpecification> contextSpecifications;
+
     // Timestamps
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -189,6 +194,14 @@ public class WorldviewElection {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<ContextSpecification> getContextSpecifications() {
+        return contextSpecifications;
+    }
+
+    public void setContextSpecifications(List<ContextSpecification> contextSpecifications) {
+        this.contextSpecifications = contextSpecifications;
     }
 
     @Override

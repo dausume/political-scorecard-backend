@@ -37,6 +37,10 @@ public class ContextualizedTermService {
         return contextualizedTermDAO.readByTermId(termId);
     }
 
+    public ApiResponse<List<ContextualizedTermDTO>> getContextualizedTermsByContextIds(List<String> contextIds) {
+        return contextualizedTermDAO.readByContextIds(contextIds);
+    }
+
     public ApiResponse<ContextualizedTermDTO> updateContextualizedTerm(ContextualizedTermDTO dto) {
         return contextualizedTermDAO.update(dto);
     }

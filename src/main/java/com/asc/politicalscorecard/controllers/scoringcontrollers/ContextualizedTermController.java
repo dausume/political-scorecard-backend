@@ -92,6 +92,22 @@ public class ContextualizedTermController {
     }
 
     /**
+     * Get contextualized terms by context IDs
+     * POST /api/contextualized-terms/by-contexts
+     * Body: List of context IDs
+     * Returns: All contextualized terms that have any of the provided contexts
+     */
+    @PostMapping("/by-contexts")
+    public ResponseEntity<ApiResponse<List<ContextualizedTermDTO>>> getContextualizedTermsByContextIds(@RequestBody List<String> contextIds) {
+        ApiResponse<List<ContextualizedTermDTO>> response = contextualizedTermService.getContextualizedTermsByContextIds(contextIds);
+        if (response.isSuccess()) {
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Update an existing contextualized term
      * PUT /api/contextualized-terms/{id}
      */
