@@ -26,10 +26,12 @@ public class SecurityConfiguration {
                 .requestMatchers("/auth/test-auth").authenticated()
                 // All other endpoints are public while testing
                 .anyRequest().permitAll()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
             );
+            // OAuth2 Resource Server commented out during development
+            // Uncomment and configure properly when implementing auth
+            // .oauth2ResourceServer(oauth2 -> oauth2
+            //     .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+            // );
 
         return http.build();
     }
