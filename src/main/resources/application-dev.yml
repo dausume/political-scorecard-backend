@@ -29,25 +29,29 @@ logging:
     com.nimbusds: DEBUG
 
 app: # Default Application-specific build configuration goes here
+  # CORS configuration for dev profile
+  # Includes both suite mode (proxy) and bare metal origins
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://localhost:2053,http://localhost:4200,https://localhost:4200,http://localhost:4201,https://localhost:4201}
   datasource:
-    # MariaDB databases
+    # MariaDB databases - connects to consolidated pol-mariadb instance
     mariadb-primary:
       database-name: mysql  # mysql is the name of the base database for Database Administration on mariadb containers.
-      url: jdbc:mariadb://psc-mariadb:3306/mysql
+      url: jdbc:mariadb://pol-mariadb:3306/mysql
       username: psc-scorecard-server
-      password: test
+      password: pscpassword
       driver-class-name: org.mariadb.jdbc.Driver
     scoring:
       database-name: psc_scoring_db
-      url: jdbc:mariadb://psc-mariadb:3306/psc_scoring_db
+      url: jdbc:mariadb://pol-mariadb:3306/psc_scoring_db
       username: psc-scorecard-server
-      password: test
+      password: pscpassword
       driver-class-name: org.mariadb.jdbc.Driver
     location:
       database-name: psc_location_db
-      url: jdbc:mariadb://psc-mariadb:3306/psc_location_db
+      url: jdbc:mariadb://pol-mariadb:3306/psc_location_db
       username: psc-scorecard-server
-      password: test
+      password: pscpassword
       driver-class-name: org.mariadb.jdbc.Driver
     # Redis databases
     # The primary database does not have a namespace, so it is not necessary to define one
