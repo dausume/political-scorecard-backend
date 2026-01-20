@@ -1,0 +1,69 @@
+# political-scorecard-backend/src/main/resources/application-prod.yml
+# Production environment configuration
+# NOTE: Sensitive values should be overridden via environment variables
+spring:
+  config:
+    activate:
+      on-profile: prod
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Keycloak realm JWKS endpoint - internal Docker network communication
+          jwk-set-uri: ${KEYCLOAK_JWKS_URI:http://pol-keycloak:8080/realms/Political-Scorecard/protocol/openid-connect/certs}
+          # Issuer URI must match the 'iss' claim in tokens (public URL)
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://auth.polari-systems.org/realms/Political-Scorecard}
+
+# Reduced logging in production
+logging:
+  level:
+    org.springframework.security: WARN
+    org.springframework.security.oauth2: WARN
+    root: WARN
+
+app:
+  # CORS configuration for production profile
+  # Only allow requests from production frontend domains
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://psc.polari-systems.org,https://www.psc.polari-systems.org,https://polari-systems.org,https://www.polari-systems.org}
+  datasource:
+    # MariaDB databases - connects to consolidated pol-mariadb instance
+    mariadb-primary:
+      database-name: mysql
+      url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://pol-mariadb:3306/mysql}
+      username: ${SPRING_DATASOURCE_USERNAME:psc-scorecard-server}
+      password: ${SPRING_DATASOURCE_PASSWORD:pscpassword}
+      driver-class-name: org.mariadb.jdbc.Driver
+    scoring:
+      database-name: psc_scoring_db
+      url: ${SCORING_DATASOURCE_URL:jdbc:mariadb://pol-mariadb:3306/psc_scoring_db}
+      username: ${SPRING_DATASOURCE_USERNAME:psc-scorecard-server}
+      password: ${SPRING_DATASOURCE_PASSWORD:pscpassword}
+      driver-class-name: org.mariadb.jdbc.Driver
+    location:
+      database-name: psc_location_db
+      url: ${LOCATION_DATASOURCE_URL:jdbc:mariadb://pol-mariadb:3306/psc_location_db}
+      username: ${SPRING_DATASOURCE_USERNAME:psc-scorecard-server}
+      password: ${SPRING_DATASOURCE_PASSWORD:pscpassword}
+      driver-class-name: org.mariadb.jdbc.Driver
+    # Redis databases
+    redis-primary:
+      host: ${REDIS_HOST:psc-redis}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:psc-server}
+      password: ${REDIS_PASSWORD:pscpassword}
+      database-index: 0
+    geolocation:
+      host: ${REDIS_HOST:psc-redis}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:psc-server}
+      password: ${REDIS_PASSWORD:pscpassword}
+      namespace: geolocation
+      database-index: 1
+    scoringcache:
+      host: ${REDIS_HOST:psc-redis}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:psc-server}
+      password: ${REDIS_PASSWORD:pscpassword}
+      namespace: scoringcache
+      database-index: 2
