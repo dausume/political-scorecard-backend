@@ -1,0 +1,58 @@
+# ==============================================================================
+# PSC Backend - Production Dockerfile
+# ==============================================================================
+# Multi-stage build: Maven builds JAR, JRE runs it with memory limits
+# Optimized for resource-constrained environments (4GB droplet)
+# ==============================================================================
+
+# Stage 1: Build the application
+FROM maven:3.9-eclipse-temurin-22-alpine AS builder
+
+WORKDIR /build
+
+# Copy pom.xml first for dependency caching
+COPY pom.xml .
+
+# Download dependencies (cached unless pom.xml changes)
+RUN mvn dependency:go-offline -B
+
+# Copy source code
+COPY src ./src
+
+# Build the JAR (skip tests for faster builds - run tests in CI)
+RUN mvn clean package -DskipTests -B
+
+# Verify and rename JAR for consistent path
+RUN ls -la /build/target/*.jar && \
+    cp /build/target/political-scorecard-*.jar /build/target/app.jar
+
+# Stage 2: Runtime image (smaller, JRE only)
+FROM eclipse-temurin:22-jre-alpine
+
+# Use /opt/app to avoid conflict with dev volume mounts on /app
+WORKDIR /opt/app
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Copy JAR from builder
+COPY --from=builder /build/target/app.jar app.jar
+
+# Set ownership
+RUN chown -R appuser:appgroup /opt/app
+
+USER appuser
+
+# Expose the Spring Boot default port
+EXPOSE 8080
+
+# JVM memory settings for constrained environment
+ENV JAVA_OPTS="-Xms128m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /opt/app/app.jar"]
