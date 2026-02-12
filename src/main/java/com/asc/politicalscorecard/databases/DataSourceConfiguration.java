@@ -21,10 +21,14 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.asc.politicalscorecard.databases.datasourceinitializers.scoringdatasource.ScoringDatasourceInitializer;
 import com.asc.politicalscorecard.databases.datasourceproperties.MariaDatasourceProperties;
+import com.asc.politicalscorecard.databases.datasourceproperties.MinioDatasourceProperties;
 import com.asc.politicalscorecard.databases.datasourceproperties.RedisDatasourceProperties;
 import com.asc.politicalscorecard.databases.datasourceinitializers.geolocationdatasource.GeoLocationDatasourceInitializer;
 import com.asc.politicalscorecard.databases.datasourceinitializers.locationsdatasource.LocationDatasourceInitializer;
+import com.asc.politicalscorecard.databases.datasourceinitializers.miniodatasource.MinioDatasourceInitializer;
 import com.asc.politicalscorecard.databases.datasourceinitializers.scoringcachedatasource.ScoringCacheDatasourceInitializer;
+
+import io.minio.MinioClient;
 
 import org.springframework.context.ApplicationContext;
 
@@ -269,6 +273,32 @@ public class DataSourceConfiguration {
     }
 
 
+    // MinIO Database ====================================================================================================
+
+    @Bean
+    @Scope("singleton")
+    @ConfigurationProperties("app.datasource.minio")
+    public MinioDatasourceProperties minioDatasourceProperties() {
+        return new MinioDatasourceProperties();
+    }
+
+    @Bean
+    @Scope("singleton")
+    @DependsOn("minioDatasourceProperties")
+    public MinioClient minioClient(@Qualifier("minioDatasourceProperties") MinioDatasourceProperties minioDatasourceProperties) {
+        return MinioClient.builder()
+                .endpoint(minioDatasourceProperties.getEndpoint())
+                .credentials(minioDatasourceProperties.getAccessKey(), minioDatasourceProperties.getSecretKey())
+                .build();
+    }
+
+    @Bean
+    @Scope("singleton")
+    @DependsOn("minioDatasourceProperties")
+    public String minioBucket(@Qualifier("minioDatasourceProperties") MinioDatasourceProperties minioDatasourceProperties) {
+        return minioDatasourceProperties.getBucket();
+    }
+
     // DATABASE INITIALIZATION ============================================================================================
 
     public class DatabaseInitializer 
@@ -285,25 +315,30 @@ public class DataSourceConfiguration {
 
         private ScoringCacheDatasourceInitializer scoringCacheDatasourceInitializer = null;
 
+        private MinioDatasourceInitializer minioDatasourceInitializer = null;
+
         @Bean
         @Scope("singleton")
-        @DependsOn({"scoringDataSourceProperties", "locationDataSourceProperties", "geoLocationDataSourceProperties", "scoringCacheDataSourceProperties"})
+        @DependsOn({"scoringDataSourceProperties", "locationDataSourceProperties", "geoLocationDataSourceProperties", "scoringCacheDataSourceProperties", "minioDatasourceProperties"})
         public DatabaseInitializer databaseInitializationSettings(
             @Qualifier("scoringDataSourceProperties") MariaDatasourceProperties scoringDataSourceProperties,
             @Qualifier("locationDataSourceProperties") MariaDatasourceProperties locationDataSourceProperties,
             @Qualifier("geoLocationDataSourceProperties") RedisDatasourceProperties geoLocationDataSourceProperties,
-            @Qualifier("scoringCacheDataSourceProperties") RedisDatasourceProperties scoringCacheDataSourceProperties
+            @Qualifier("scoringCacheDataSourceProperties") RedisDatasourceProperties scoringCacheDataSourceProperties,
+            @Qualifier("minioDatasourceProperties") MinioDatasourceProperties minioDatasourceProperties
             )
         {
             System.out.println("Setting database initialization settings...");
             System.out.println("GeoLocation database props and name: " + geoLocationDataSourceProperties + " : " + geoLocationDataSourceProperties.getNamespace());
             System.out.println("ScoringCache database props and name: " + scoringCacheDataSourceProperties + " : " + scoringCacheDataSourceProperties.getNamespace());
             System.out.println("Location database props and name: " + locationDataSourceProperties + " : " + locationDataSourceProperties.getDatabaseName());
+            System.out.println("Minio database props and bucket: " + minioDatasourceProperties + " : " + minioDatasourceProperties.getBucket());
             // Set the database names
             initializationState.setScoringDatabaseName(scoringDataSourceProperties.getDatabaseName());
             initializationState.setLocationDatabaseName(locationDataSourceProperties.getDatabaseName());
             initializationState.setGeoLocationDatabaseName(geoLocationDataSourceProperties.getNamespace());
             initializationState.setScoringCacheDatabaseName(scoringCacheDataSourceProperties.getNamespace());
+            initializationState.setMinioDatabaseName(minioDatasourceProperties.getBucket());
             return this;
         }
 
@@ -311,17 +346,18 @@ public class DataSourceConfiguration {
         // jdbcClients do not need to be passed because they are defined via @Qualifier in the DatabaseInitializer class.
         @Bean
         @Scope("singleton")
-        @DependsOn({"primaryJdbcClient", "redisTemplate", "databaseInitializationSettings"})
+        @DependsOn({"primaryJdbcClient", "redisTemplate", "minioClient", "databaseInitializationSettings"})
         public DatabaseInitializer databaseInitializer(
             @Qualifier("primaryJdbcClient") JdbcClient primaryJdbcClient,
-            @Qualifier("redisTemplate") RedisTemplate<String, String> primaryRedisTemplate
-            ) 
+            @Qualifier("redisTemplate") RedisTemplate<String, String> primaryRedisTemplate,
+            @Qualifier("minioClient") MinioClient minioClient
+            )
         {
             System.out.println("Starting database initialization...");
             try {
                 // I need these initializers to run and then detect if they completed successfully
                 // if all completed successfully, then I can start the application.
-                
+
                 // Initialize context database
                 scoringDatasourceInitializer = new ScoringDatasourceInitializer(
                     primaryJdbcClient,
@@ -335,7 +371,7 @@ public class DataSourceConfiguration {
                     applicationContext,
                     initializationState
                     );
-                
+
                 geoLocationDatasourceInitializer = new GeoLocationDatasourceInitializer(
                     primaryRedisTemplate,
                     applicationContext,
@@ -348,10 +384,17 @@ public class DataSourceConfiguration {
                     initializationState
                 );
 
+                minioDatasourceInitializer = new MinioDatasourceInitializer(
+                    minioClient,
+                    applicationContext,
+                    initializationState
+                );
+
                 scoringDatasourceInitializer.createDatabaseIfNotExists();
                 locationDatasourceInitializer.createDatabaseIfNotExists();
                 geoLocationDatasourceInitializer.createNamespaceIfNotExists();
                 scoringCacheDatasourceInitializer.createNamespaceIfNotExists();
+                minioDatasourceInitializer.createBucketIfNotExists();
                 System.out.println("All initializers started, awaiting database initialization completion.");
                 // Wait for all databases to be ready
                 initializationState.waitForDatabaseInitializations();
@@ -378,13 +421,15 @@ public class DataSourceConfiguration {
                     initializationState.isInitializedScoringDatabase() &&
                     initializationState.isInitializedLocationDatabase() &&
                     initializationState.isInitializedGeoLocationDatabase() &&
-                    initializationState.isInitializedScoringCacheDatabase()
+                    initializationState.isInitializedScoringCacheDatabase() &&
+                    initializationState.isInitializedMinioDatabase()
                 )
                 {
                     scoringDatasourceInitializer.initialize();
                     locationDatasourceInitializer.initialize();
                     geoLocationDatasourceInitializer.initialize();
                     scoringCacheDatasourceInitializer.initialize();
+                    minioDatasourceInitializer.initialize();
                     System.out.println("All initializers completed successfully. Application can start.");
                 }
                 else

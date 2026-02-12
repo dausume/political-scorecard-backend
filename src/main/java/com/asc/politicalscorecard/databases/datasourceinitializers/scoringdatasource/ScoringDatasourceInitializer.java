@@ -130,12 +130,23 @@ public class ScoringDatasourceInitializer {
         WorldviewBallotTableInitializer worldviewBallotTableInitializer = new WorldviewBallotTableInitializer(scoringJdbcClient);
         worldviewBallotTableInitializer.initializeTable();
 
+        LegislationTableInitializer legislationTableInitializer = new LegislationTableInitializer(scoringJdbcClient);
+        legislationTableInitializer.initializeTable();
+
+        LegislationAnnotationTableInitializer legislationAnnotationTableInitializer = new LegislationAnnotationTableInitializer(scoringJdbcClient);
+        legislationAnnotationTableInitializer.initializeTable();
+
         initializationState.setInitializedScoringTables(true);
 
         // Initialize sample data - Labor Quality Per State 2022
         System.out.println("Initializing sample data for Labor Quality 2022...");
         LaborQualityDataInitializer laborQualityDataInitializer = new LaborQualityDataInitializer(scoringJdbcClient);
         laborQualityDataInitializer.initializeData();
+
+        // Initialize sample data - Legislation
+        System.out.println("Initializing sample legislation data...");
+        LegislationSampleDataInitializer legislationSampleDataInitializer = new LegislationSampleDataInitializer(scoringJdbcClient);
+        legislationSampleDataInitializer.initializeData();
     }
 
 }

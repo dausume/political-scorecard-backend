@@ -75,3 +75,9 @@ app: # Default Application-specific build configuration goes here
       password: pscpassword
       namespace: scoringcache
       database-index: 2
+    # MinIO object storage
+    minio:
+      endpoint: http://pol-file-store:9000
+      access-key: polari-admin
+      secret-key: polari-file-store-password
+      bucket: legislation

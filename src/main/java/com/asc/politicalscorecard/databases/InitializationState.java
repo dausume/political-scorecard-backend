@@ -28,10 +28,16 @@ public class InitializationState {
     private boolean initializedScoringCacheTables = false;
     private String scoringCacheDatabaseName = "";
 
+    // MinIO Database
+
+    private boolean initializedMinioDatabase = false;
+    private boolean initializedMinioTables = false;
+    private String minioDatabaseName = "";
+
     // -- Database Initialization Getters
 
     public synchronized boolean isInitializedDatabases() {
-        return initializedScoringDatabase && initializedLocationDatabase && initializedGeoLocationDatabase && initializedScoringCacheDatabase;
+        return initializedScoringDatabase && initializedLocationDatabase && initializedGeoLocationDatabase && initializedScoringCacheDatabase && initializedMinioDatabase;
     }
 
     public synchronized boolean isInitializedLocationDatabase() {
@@ -50,10 +56,14 @@ public class InitializationState {
         return initializedScoringCacheDatabase;
     }
 
+    public synchronized boolean isInitializedMinioDatabase() {
+        return initializedMinioDatabase;
+    }
+
     // -- table initialization getters
 
     public synchronized boolean isInitializedTables() {
-        return initializedLocationTables && initializedScoringTables && initializedGeoLocationTables && initializedScoringCacheTables;
+        return initializedLocationTables && initializedScoringTables && initializedGeoLocationTables && initializedScoringCacheTables && initializedMinioTables;
     }
 
     public synchronized boolean isInitializedLocationTables() {
@@ -70,6 +80,10 @@ public class InitializationState {
 
     public synchronized boolean isInitializedScoringCacheTables() {
         return initializedScoringCacheTables;
+    }
+
+    public synchronized boolean isInitializedMinioTables() {
+        return initializedMinioTables;
     }
 
     // -- Database Initialization Setters
@@ -98,6 +112,12 @@ public class InitializationState {
         checkAndNotifyDatabaseInitialization();
     }
 
+    public synchronized void setInitializedMinioDatabase(boolean initializedMinioDatabase) {
+        System.out.println("Setting initializedMinioDatabase");
+        this.initializedMinioDatabase = initializedMinioDatabase;
+        checkAndNotifyDatabaseInitialization();
+    }
+
     // -- Table Initialization Setters
 
     public synchronized void setInitializedLocationTables(boolean initializedLocationTables) {
@@ -120,6 +140,11 @@ public class InitializationState {
         checkAndNotifyTableInitialization();
     }
 
+    public synchronized void setInitializedMinioTables(boolean initializedMinioTables) {
+        this.initializedMinioTables = initializedMinioTables;
+        checkAndNotifyTableInitialization();
+    }
+
     // -- Database Name Getters
 
     public synchronized String getLocationDatabaseName() {
@@ -138,6 +163,10 @@ public class InitializationState {
         return scoringCacheDatabaseName;
     }
 
+    public synchronized String getMinioDatabaseName() {
+        return minioDatabaseName;
+    }
+
     // -- Database Name Setters
 
     public void setLocationDatabaseName(String locationDatabaseName) {
@@ -154,6 +183,10 @@ public class InitializationState {
 
     public void setScoringCacheDatabaseName(String scoringCacheDatabaseName) {
         this.scoringCacheDatabaseName = scoringCacheDatabaseName;
+    }
+
+    public void setMinioDatabaseName(String minioDatabaseName) {
+        this.minioDatabaseName = minioDatabaseName;
     }
 
     // -- Synchronization Methods --
@@ -178,6 +211,7 @@ public class InitializationState {
         System.out.println("Scoring Database: " + initializedScoringDatabase);
         System.out.println("GeoLocation Database: " + initializedGeoLocationDatabase);
         System.out.println("ScoringCache Database: " + initializedScoringCacheDatabase);
+        System.out.println("Minio Database: " + initializedMinioDatabase);
         if (isInitializedDatabases()) {
             notifyAllDatabasesReady();
         }
@@ -189,6 +223,7 @@ public class InitializationState {
         System.out.println("GeoLocation Tables: " + initializedGeoLocationTables);
         System.out.println("Scoring Tables: " + initializedScoringTables);
         System.out.println("ScoringCache Tables: " + initializedScoringCacheTables);
+        System.out.println("Minio Tables: " + initializedMinioTables);
         if (isInitializedTables()) {
             notifyAllTablesReady();
         }
