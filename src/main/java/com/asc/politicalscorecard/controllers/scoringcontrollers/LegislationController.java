@@ -152,4 +152,30 @@ public class LegislationController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/{id}/export/annotations/pdf")
+    public ResponseEntity<byte[]> exportAnnotationsAsPdf(@PathVariable String id) {
+        try {
+            byte[] pdfBytes = legislationService.exportAnnotationsAsPdf(id);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "annotations-" + id + ".pdf");
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{id}/export/annotations/docx")
+    public ResponseEntity<byte[]> exportAnnotationsAsDocx(@PathVariable String id) {
+        try {
+            byte[] docxBytes = legislationService.exportAnnotationsAsDocx(id);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+            headers.setContentDispositionFormData("attachment", "annotations-" + id + ".docx");
+            return new ResponseEntity<>(docxBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
