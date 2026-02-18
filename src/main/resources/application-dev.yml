@@ -29,6 +29,11 @@ logging:
     com.nimbusds: DEBUG
 
 app: # Default Application-specific build configuration goes here
+  keycloak-admin:
+    server-url: ${KEYCLOAK_ADMIN_URL:http://pol-keycloak:8080}
+    realm: ${KEYCLOAK_REALM:Political-Scorecard}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-permissions}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:unset}
   # CORS configuration for dev profile
   # Includes both suite mode (proxy) and bare metal origins
   cors:
