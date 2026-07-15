@@ -130,6 +130,15 @@ public class ScoringDatasourceInitializer {
         WorldviewBallotTableInitializer worldviewBallotTableInitializer = new WorldviewBallotTableInitializer(scoringJdbcClient);
         worldviewBallotTableInitializer.initializeTable();
 
+        // 2026-07-14 ballot-hosting architecture move: PSC hosts the
+        // public vote over candidates drafted in Polari. polari_vote_topic
+        // before worldview_vote — votes reference their topic.
+        PolariVoteTopicTableInitializer polariVoteTopicTableInitializer = new PolariVoteTopicTableInitializer(scoringJdbcClient);
+        polariVoteTopicTableInitializer.initializeTable();
+
+        WorldviewVoteTableInitializer worldviewVoteTableInitializer = new WorldviewVoteTableInitializer(scoringJdbcClient);
+        worldviewVoteTableInitializer.initializeTable();
+
         LegislationTableInitializer legislationTableInitializer = new LegislationTableInitializer(scoringJdbcClient);
         legislationTableInitializer.initializeTable();
 

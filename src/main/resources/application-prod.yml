@@ -22,6 +22,10 @@ logging:
     root: WARN
 
 app:
+  # Polari's scoring backend (server-to-server sync target for
+  # PolariVoteTopic — 2026-07-14 ballot-hosting architecture move).
+  polari:
+    api-url: ${POLARI_API_URL:http://prf-backend:3000}
   keycloak-admin:
     server-url: ${KEYCLOAK_ADMIN_URL:http://pol-keycloak:8080}
     realm: ${KEYCLOAK_REALM:Political-Scorecard}
