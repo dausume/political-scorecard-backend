@@ -167,4 +167,52 @@ public class KeycloakAdminService {
         }
         return null;
     }
+
+    /**
+     * Look up a Keycloak user's id by exact username (2026-07-14
+     * PolicyVote dual-path submission — resolving WHO an admin means
+     * to authorize as a politician's staff before adding them to that
+     * politician's group). Returns null if no exact match exists.
+     */
+    public String findUserIdByUsername(String username) {
+        String token = getServiceAccountToken();
+        String adminBase = "/admin/realms/" + config.getRealm();
+
+        List<Map<String, Object>> users = restClient.get()
+                .uri(adminBase + "/users?username=" + username + "&exact=true")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+
+        if (users != null && !users.isEmpty()) {
+            return (String) users.get(0).get("id");
+        }
+        return null;
+    }
+
+    /**
+     * Returns an existing group's id by name, or creates it first if it
+     * doesn't exist yet (2026-07-14 — politician-staff authorization
+     * groups are created on first use, one per politician, rather than
+     * needing to be pre-seeded).
+     */
+    public String ensureGroupExists(String groupName) {
+        String existing = getGroupIdByName(groupName);
+        if (existing != null) {
+            return existing;
+        }
+
+        String token = getServiceAccountToken();
+        String adminBase = "/admin/realms/" + config.getRealm();
+
+        restClient.post()
+                .uri(adminBase + "/groups")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("name", groupName))
+                .retrieve()
+                .toBodilessEntity();
+
+        return getGroupIdByName(groupName);
+    }
 }
