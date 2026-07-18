@@ -191,6 +191,58 @@ public class KeycloakAdminService {
     }
 
     /**
+     * List all realm groups WITH attributes (briefRepresentation=false
+     * so the psc-type attribute survives) — the real group directory
+     * behind /api/groups/directory, replacing the frontend's mocked
+     * group catalogues.
+     */
+    public List<Map<String, Object>> listGroups() {
+        String token = getServiceAccountToken();
+        String adminBase = "/admin/realms/" + config.getRealm();
+
+        List<Map<String, Object>> groups = restClient.get()
+                .uri(adminBase + "/groups?briefRepresentation=false")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+
+        return groups != null ? groups : List.of();
+    }
+
+    /**
+     * Members of a group (staff-authorization browse surface).
+     */
+    public List<Map<String, Object>> getGroupMembers(String groupId) {
+        String token = getServiceAccountToken();
+        String adminBase = "/admin/realms/" + config.getRealm();
+
+        List<Map<String, Object>> members = restClient.get()
+                .uri(adminBase + "/groups/" + groupId + "/members")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+
+        return members != null ? members : List.of();
+    }
+
+    /**
+     * Every user holding a realm role (e.g. the policy-voting-admin
+     * holder list the revamp plan asks to surface).
+     */
+    public List<Map<String, Object>> getRealmRoleHolders(String roleName) {
+        String token = getServiceAccountToken();
+        String adminBase = "/admin/realms/" + config.getRealm();
+
+        List<Map<String, Object>> holders = restClient.get()
+                .uri(adminBase + "/roles/" + roleName + "/users")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+
+        return holders != null ? holders : List.of();
+    }
+
+    /**
      * Returns an existing group's id by name, or creates it first if it
      * doesn't exist yet (2026-07-14 — politician-staff authorization
      * groups are created on first use, one per politician, rather than

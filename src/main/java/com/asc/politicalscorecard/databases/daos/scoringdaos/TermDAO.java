@@ -84,6 +84,44 @@ public class TermDAO extends AbstractDAO<TermDTO> {
     }
 
     /**
+     * Find a term by exact name (term-availability signals reference
+     * terms by name; the admitting flow ensures the row exists).
+     */
+    public ApiResponse<TermDTO> readByName(String name) {
+        String query = "SELECT * FROM term WHERE name = ? ORDER BY name LIMIT 1";
+        try {
+            List<TermDTO> dtoList = jdbcClient.sql(query)
+                    .params(List.of(name))
+                    .query(TermDTO.class)
+                    .list();
+            if (!dtoList.isEmpty()) {
+                return new ApiResponse<>(true, "Term found successfully", dtoList.get(0));
+            }
+            return new ApiResponse<>(false, "No term found with the given name.", null);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error reading term by name: ", e);
+            return new ApiResponse<>(false, "Error reading term by name: " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Distinct non-empty categories across all terms — the real
+     * source behind category pickers (replaces
+     * MOCK_POLITICAL_CATEGORIES in the frontend).
+     */
+    public ApiResponse<List<String>> readDistinctCategories() {
+        String query = "SELECT DISTINCT category FROM term " +
+                "WHERE category IS NOT NULL AND category != '' ORDER BY category";
+        try {
+            List<String> categories = jdbcClient.sql(query).query(String.class).list();
+            return new ApiResponse<>(true, "Categories retrieved successfully", categories);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error reading term categories: ", e);
+            return new ApiResponse<>(false, "Error reading term categories: " + e.getMessage(), null);
+        }
+    }
+
+    /**
      * Get terms by category
      */
     public ApiResponse<List<TermDTO>> readByCategory(String category) {

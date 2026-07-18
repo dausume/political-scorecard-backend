@@ -94,6 +94,35 @@ public class GroupMembershipService {
     }
 
     /**
+     * The public group directory: every realm group as
+     * {id, name, pscType}, optionally filtered by psc-type
+     * ("Political-Group" / "Professional-Group"). Groups without a
+     * psc-type attribute (e.g. per-politician staff groups) are
+     * excluded — they are authorization plumbing, not joinable
+     * civic groups.
+     */
+    public List<Map<String, Object>> getGroupDirectory(String typeFilter) {
+        List<Map<String, Object>> groups = keycloakAdminService.listGroups();
+        return groups.stream()
+                .map(g -> {
+                    String pscType = extractPscType(g);
+                    if (pscType == null) {
+                        return null;
+                    }
+                    if (typeFilter != null && !typeFilter.isEmpty()
+                            && !typeFilter.equals(pscType)) {
+                        return null;
+                    }
+                    return Map.<String, Object>of(
+                            "id", g.get("id"),
+                            "name", g.get("name"),
+                            "pscType", pscType);
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Returns the names of groups the user currently belongs to.
      */
     public List<String> getUserGroupNames(String userId) {

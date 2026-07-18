@@ -233,6 +233,13 @@ public class PolariSyncService {
      *  `curl --trace-ascii` against the live API): one part, bare
      *  Content-Disposition, no Content-Type on the part itself, CRLF
      *  line endings, closing boundary with no trailing CRLF. */
+    /** Public entry for other services that need a Polari row created
+     *  through the same verified multipart CRUDE path (governance UI:
+     *  LogicForkVote / LogicForkBallot / DecisionProcedureEdge). */
+    public void createPolariRows(String className, List<Map<String, Object>> initParamSets) throws Exception {
+        postCrude(className, initParamSets);
+    }
+
     private void postCrude(String className, List<Map<String, Object>> initParamSets) throws Exception {
         String boundary = "----PSCPolariSync" + java.util.UUID.randomUUID();
         String json = objectMapper.writeValueAsString(initParamSets);

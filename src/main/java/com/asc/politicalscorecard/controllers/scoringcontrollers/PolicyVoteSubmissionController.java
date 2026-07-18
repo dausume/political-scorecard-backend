@@ -84,4 +84,47 @@ public class PolicyVoteSubmissionController {
                 ? new ResponseEntity<>(response, HttpStatus.OK)
                 : new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    /**
+     * Browse every staff authorization (per-politician group +
+     * members) — admin-only.
+     * GET /api/policy-votes/authorizations
+     */
+    @PreAuthorize("hasRole('policy-voting-admin')")
+    @GetMapping("/authorizations")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> listAuthorizations() {
+        ApiResponse<java.util.List<java.util.Map<String, Object>>> response =
+                authorizationService.listAuthorizations();
+        return response.isSuccess()
+                ? new ResponseEntity<>(response, HttpStatus.OK)
+                : new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Revoke a staff authorization — admin-only.
+     * POST /api/policy-votes/revoke-staff
+     */
+    @PreAuthorize("hasRole('policy-voting-admin')")
+    @PostMapping("/revoke-staff")
+    public ResponseEntity<ApiResponse<StaffAuthorizationDTO>> revokeStaff(
+            @RequestBody StaffAuthorizationDTO dto) {
+        ApiResponse<StaffAuthorizationDTO> response = authorizationService.revokeStaff(dto);
+        return response.isSuccess()
+                ? new ResponseEntity<>(response, HttpStatus.OK)
+                : new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Every policy-voting-admin role holder — admin-only.
+     * GET /api/policy-votes/admins
+     */
+    @PreAuthorize("hasRole('policy-voting-admin')")
+    @GetMapping("/admins")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> listAdmins() {
+        ApiResponse<java.util.List<java.util.Map<String, Object>>> response =
+                authorizationService.listAdmins();
+        return response.isSuccess()
+                ? new ResponseEntity<>(response, HttpStatus.OK)
+                : new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

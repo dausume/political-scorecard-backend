@@ -23,6 +23,26 @@ public class GroupController {
         this.groupMembershipService = groupMembershipService;
     }
 
+    /**
+     * Public group directory (replaces the frontend's mocked group
+     * catalogues): every psc-typed Keycloak group, optionally
+     * filtered with ?type=Political-Group|Professional-Group.
+     */
+    @GetMapping("/directory")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getGroupDirectory(
+            @RequestParam(required = false) String type) {
+        try {
+            List<Map<String, Object>> groups = groupMembershipService.getGroupDirectory(type);
+            ApiResponse<List<Map<String, Object>>> response = ResponseHandler.generateSuccessResponse(
+                    "Group directory retrieved", groups);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            ApiResponse<List<Map<String, Object>>> response = new ApiResponse<>(
+                    false, "Failed to retrieve group directory: " + e.getMessage(), null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/mine")
     public ResponseEntity<ApiResponse<List<String>>> getMyGroups(JwtAuthenticationToken authentication) {

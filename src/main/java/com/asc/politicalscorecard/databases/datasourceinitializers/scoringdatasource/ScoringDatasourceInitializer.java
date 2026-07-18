@@ -34,11 +34,17 @@ public class ScoringDatasourceInitializer {
     private String scoringDatasourceName = "";
 
     // Injects the primary JDBC client so that we can create the context database via the default mysql database.
+    // Same source app.polari.api-url resolves from (this class is
+    // constructed manually in DataSourceConfiguration, so property
+    // injection is not available here).
+    private final String polariApiUrl =
+        System.getenv().getOrDefault("POLARI_API_URL", "http://prf-backend:3000");
+
     public ScoringDatasourceInitializer(
         @Qualifier("primaryJdbcClient") JdbcClient primaryJdbcClient,
         ApplicationContext applicationContext,
         InitializationState initializationState
-        ) 
+        )
         {
         this.primaryJdbcClient = primaryJdbcClient;
         this.applicationContext = applicationContext;
@@ -144,6 +150,11 @@ public class ScoringDatasourceInitializer {
 
         LegislationAnnotationTableInitializer legislationAnnotationTableInitializer = new LegislationAnnotationTableInitializer(scoringJdbcClient);
         legislationAnnotationTableInitializer.initializeTable();
+
+        // Group↔instance authority: instance registry (seeded with the
+        // configured default Polari), PSC-side bindings, term provenance.
+        AuthorityTablesInitializer authorityTablesInitializer = new AuthorityTablesInitializer(scoringJdbcClient, polariApiUrl);
+        authorityTablesInitializer.initializeTables();
 
         initializationState.setInitializedScoringTables(true);
 

@@ -42,6 +42,11 @@ public class TermService {
         return termDAO.readByCategory(category);
     }
 
+    // DISTINCT CATEGORIES
+    public ApiResponse<List<String>> getCategories() {
+        return termDAO.readDistinctCategories();
+    }
+
     // UPDATE
     public ApiResponse<TermDTO> updateTerm(TermDTO termDTO) {
         return termDAO.update(termDTO);

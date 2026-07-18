@@ -80,6 +80,17 @@ public class TermController {
     }
 
     /**
+     * Distinct term categories (real source for category pickers)
+     * GET /api/terms/categories
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponse<List<String>>> getCategories() {
+        ApiResponse<List<String>> response = termService.getCategories();
+        return new ResponseEntity<>(response,
+                response.isSuccess() ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
      * Get terms by category
      * GET /api/terms/category/{category}
      */
