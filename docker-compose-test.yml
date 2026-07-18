@@ -25,11 +25,33 @@ services:
     networks:
       - psc-test-network
 
+  # Ephemeral MinIO — the backend's DatabaseInitializer blocks startup until
+  # a reachable MinIO reports its bucket state, so the isolated test stack
+  # carries its own (matching the suite's pol-file-store). No volume: test
+  # data is throwaway.
+  psc-minio-test:
+    image: minio/minio:latest
+    container_name: psc-minio-test
+    command: server /data
+    environment:
+      - MINIO_ROOT_USER=psc-minio-test
+      - MINIO_ROOT_PASSWORD=psc-minio-test-password
+    networks:
+      - psc-test-network
+
   political-scorecard-backend-test:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: political-scorecard-backend-test
+    # Run the build as the HOST user, not root. The service bind-mounts the
+    # repo (.:/app) and Maven writes ./target/ through it; as root that left
+    # root-owned target/ on the host, which then broke host-native builds with
+    # "target/... Permission denied". Mapping to the host UID keeps every
+    # generated file host-owned (deletable without sudo). Export UID/GID or it
+    # falls back to 1000:1000. HOME is redirected to an in-container path so
+    # Maven's ~/.m2 does not need a host home.
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "8081:8080"  # Different port for test backend
     networks:
@@ -40,9 +62,12 @@ services:
       #- ./test-reports:/app/target/site/surefire-reports
     environment:
       - SPRING_PROFILES_ACTIVE=test
+      - HOME=/tmp/mvnhome   # writable Maven home for the non-root mapped user
     command: ./startup_shell/test_startup.sh  # Test-specific startup script
     depends_on:
       - psc-mariadb-test
+      - psc-redis-test
+      - psc-minio-test
 
 volumes:
   # No persistent volumes, we use ephemeral storage for testing

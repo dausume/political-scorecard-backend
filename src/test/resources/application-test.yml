@@ -4,11 +4,28 @@ spring:
   config:
     activate:
       on-profile: test
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Self-contained stub so the isolated test stack needs NO live
+          # Keycloak: a jwk-set-uri is only fetched lazily when a token is
+          # actually validated, and the test suite sends none. Point
+          # KEYCLOAK_JWKS_URI at a real Keycloak to test JWT flows.
+          jwk-set-uri: ${KEYCLOAK_JWKS_URI:http://localhost:9999/realms/Political-Scorecard/protocol/openid-connect/certs}
 app: # Test-specific app configuration goes here (e.g., in-memory DB or test-specific services)
+  keycloak-admin:
+    # Stub values so ${app.keycloak-admin.*} resolves without the suite's
+    # Keycloak; the admin RestClient is built lazily and never called by the
+    # standalone test suite. Override via env to test against a live realm.
+    server-url: ${KEYCLOAK_ADMIN_URL:http://localhost:9999}
+    realm: ${KEYCLOAK_REALM:Political-Scorecard}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-permissions}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:unset}
   datasource:
     # MariaDB databases
     mariadb-primary:
-      db_name: mysql  # mysql is the name of the base database for Database Administration on mariadb containers.
+      database-name: mysql  # mysql is the name of the base database for Database Administration on mariadb containers.
       url: jdbc:mariadb://psc-mariadb-test:3306/mysql
       username: psc-server-test
       password: test
@@ -20,12 +37,12 @@ app: # Test-specific app configuration goes here (e.g., in-memory DB or test-spe
       password: test
       driver-class-name: org.mariadb.jdbc.Driver
     location:
-      db_name: psc_location_db_test
+      database-name: psc_location_db_test
       url: jdbc:mariadb://psc-mariadb-test:3306/psc_location_db_test
       username: psc-server-test
       password: test
       driver-class-name: org.mariadb.jdbc.Driver
-    # Redis databases
+    # Redis databases (served by the psc-redis-test KeyDB container)
     redis-primary:
       host: psc-redis-test
       port: 6800
@@ -39,3 +56,18 @@ app: # Test-specific app configuration goes here (e.g., in-memory DB or test-spe
       password: pscpassword
       namespace: geolocation-test
       database-index: 1
+    scoringcache:
+      host: psc-redis-test
+      port: 6800
+      username: psc-server-test
+      password: pscpassword
+      namespace: scoringcache-test
+      database-index: 2
+    # MinIO object storage (the psc-minio-test container in
+    # docker-compose-test.yml — startup blocks until MinIO is reachable, so
+    # the isolated test stack carries its own).
+    minio:
+      endpoint: ${MINIO_ENDPOINT_URL:http://psc-minio-test:9000}
+      access-key: ${MINIO_ACCESS_KEY:psc-minio-test}
+      secret-key: ${MINIO_SECRET_KEY:psc-minio-test-password}
+      bucket: legislation-test

@@ -1,2 +1,12 @@
-# Test connection to Redis
-redis-cli -h localhost -p 6379 --user myuser --pass my_secure_password
+# PSC cache — KeyDB
+
+This directory builds the PSC cache image (dev: `Dockerfile`, port 6379;
+test: `Dockerfile.test`, port 6800) on `eqalpha/keydb`, the same image family
+the rest of the suite uses (`prf-keydb`). KeyDB speaks the Redis protocol and
+reads the same ACL `user` directives, so the Spring `spring.data.redis-*`
+configs are unchanged. The former bitnami/redis base was removed from Docker
+Hub and is gone from every compose.
+
+# Test a connection (from inside the container)
+keydb-cli -p 6379 --user psc-server --pass pscpassword ping        # dev
+keydb-cli -p 6800 --user psc-server-test --pass pscpassword ping   # test
