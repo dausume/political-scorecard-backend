@@ -30,14 +30,19 @@ services:
   # carries its own (matching the suite's pol-file-store). No volume: test
   # data is throwaway.
   psc-minio-test:
-    image: minio/minio:latest
+    # the suite's file store (SeaweedFS S3, one definition: polari-rf-node/prf-file-store) — minio/minio left
+    # Docker Hub 2026-09; same S3 contract on :9000, same MINIO_* credential knobs, so the Spring MinIO client is unchanged
+    build:
+      context: ../../polari-rf-node/prf-file-store
+      dockerfile: Dockerfile
+    image: prf-file-store:psc-test
     container_name: psc-minio-test
-    command: server /data
     environment:
       - MINIO_ROOT_USER=psc-minio-test
       - MINIO_ROOT_PASSWORD=psc-minio-test-password
     networks:
       - psc-test-network
+
 
   political-scorecard-backend-test:
     build:
